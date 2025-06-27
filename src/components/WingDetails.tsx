@@ -62,7 +62,7 @@ const WingDetails = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="employee-directory" className="w-full">
+        <Tabs defaultValue="available-seats" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="available-seats" className="flex items-center space-x-2">
               <span>📅</span>

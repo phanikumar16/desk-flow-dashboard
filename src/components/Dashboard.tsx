@@ -118,9 +118,10 @@ const Dashboard = () => {
         {/* Wings Selection */}
         <div className="grid md:grid-cols-2 gap-8">
           {wings.map((wing) => (
-            <div key={wing.id} className="group">
-              <Link to={`/wing/${wing.id}`}>
-                <div className={`bg-gradient-to-r ${wing.gradient} p-8 rounded-2xl text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer`}>
+            <Link key={wing.id} to={`/wing/${wing.id}`} className="group block">
+              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer overflow-hidden">
+                {/* Wing Header Card */}
+                <div className={`bg-gradient-to-r ${wing.gradient} p-8 text-white`}>
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <h3 className="text-3xl font-bold mb-2">{wing.name}</h3>
@@ -131,41 +132,41 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
-              </Link>
 
-              {/* Wing Stats */}
-              <div className="bg-white rounded-lg shadow-md p-6 mt-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg font-semibold text-gray-800">📍 Wing Details</h4>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                    {wing.availableSeats}/{wing.totalSeats} Available
-                  </Badge>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Total Seats</span>
-                    <span className="font-medium">{wing.totalSeats}</span>
+                {/* Wing Stats */}
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-800">📍 Wing Details</h4>
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                      {wing.availableSeats}/{wing.totalSeats} Available
+                    </Badge>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Available Now</span>
-                    <span className="font-medium text-green-600">{wing.availableSeats}</span>
+                  
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Total Seats</span>
+                      <span className="font-medium">{wing.totalSeats}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Available Now</span>
+                      <span className="font-medium text-green-600">{wing.availableSeats}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full"
+                        style={{ width: `${(wing.availableSeats / wing.totalSeats) * 100}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full"
-                      style={{ width: `${(wing.availableSeats / wing.totalSeats) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
 
-                <Link to={`/wing/${wing.id}`}>
-                  <Button className="w-full mt-4 bg-gray-900 hover:bg-gray-800 text-white">
-                    Explore {wing.name} →
-                  </Button>
-                </Link>
+                  <div className="mt-4 text-center">
+                    <span className="text-gray-600 font-medium">
+                      Explore {wing.name} →
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

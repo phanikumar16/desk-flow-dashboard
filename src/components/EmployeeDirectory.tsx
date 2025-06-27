@@ -46,6 +46,12 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
+  // Generate sample email from name
+  const generateEmail = (name: string) => {
+    if (name === 'Unassigned') return '';
+    return name.toLowerCase().replace(/\s+/g, '.') + '@cprime.com';
+  };
+
   const EmployeeCard = ({ employee }: { employee: typeof employees[0] }) => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
       <div className="flex items-center space-x-4">
@@ -63,7 +69,12 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-900 truncate">{employee.name}</h3>
+            <div>
+              <h3 className="font-semibold text-gray-900 truncate">{employee.name}</h3>
+              {employee.name !== 'Unassigned' && (
+                <p className="text-xs text-gray-500 truncate">{generateEmail(employee.name)}</p>
+              )}
+            </div>
             <div className="text-right">
               <Badge variant="outline" className="text-xs font-mono bg-blue-50 text-blue-700">
                 {employee.seatNumber}
