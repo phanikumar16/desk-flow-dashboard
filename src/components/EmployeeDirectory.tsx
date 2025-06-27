@@ -17,9 +17,8 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
   // Filter employees for A-Tech wing
   const wingEmployees = employees.filter(emp => emp.wing === 'A-Tech');
   
-  // Separate onsite and remote employees
+  // Only show onsite employees
   const onsiteEmployees = wingEmployees.filter(emp => emp.type === 'onsite');
-  const remoteEmployees = wingEmployees.filter(emp => emp.type === 'remote');
 
   // Apply filters
   const filterEmployees = (employeeList: typeof employees) => {
@@ -32,7 +31,6 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
   };
 
   const filteredOnsite = filterEmployees(onsiteEmployees);
-  const filteredRemote = filterEmployees(remoteEmployees);
 
   const getStatusBadge = (status: string) => {
     const statusColors = {
@@ -133,61 +131,29 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
         </div>
       </div>
 
-      {/* Side by Side Layout for Onsite and Remote */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Onsite Employees */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">🏢</span>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900">Onsite Employees</h3>
-              <p className="text-sm text-gray-600">{filteredOnsite.length} employees with assigned seats</p>
-            </div>
+      {/* Onsite Employees */}
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <span className="text-white text-sm">🏢</span>
           </div>
-
-          <div className="grid gap-4">
-            {filteredOnsite.map((employee) => (
-              <EmployeeCard key={employee.seatNumber} employee={employee} />
-            ))}
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">Onsite Employees</h3>
+            <p className="text-sm text-gray-600">{filteredOnsite.length} employees with assigned seats</p>
           </div>
-
-          {filteredOnsite.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No onsite employees found matching your criteria.
-            </div>
-          )}
         </div>
 
-        {/* Remote Employees */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">🏠</span>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900">Remote Employees</h3>
-              <p className="text-sm text-gray-600">{filteredRemote.length} remote team members</p>
-            </div>
-          </div>
-
-          {filteredRemote.length > 0 ? (
-            <div className="grid gap-4">
-              {filteredRemote.map((employee) => (
-                <EmployeeCard key={employee.id} employee={employee} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <div className="text-4xl mb-2">👥</div>
-              <p>No remote employees registered yet.</p>
-              <p className="text-sm mt-1">Remote team members will appear here once added to the system.</p>
-            </div>
-          )}
+        <div className="grid gap-4">
+          {filteredOnsite.map((employee) => (
+            <EmployeeCard key={employee.seatNumber} employee={employee} />
+          ))}
         </div>
-        
+
+        {filteredOnsite.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No onsite employees found matching your criteria.
+          </div>
+        )}
       </div>
     </div>
   );
