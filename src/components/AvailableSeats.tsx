@@ -349,7 +349,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Select dates for reservation:
+                Select dates for reservation (weekdays only):
               </label>
               {modalSeat && (() => {
                 const isUnassigned = UNASSIGNED_SEATS.includes(modalSeat.seat_number);
@@ -373,11 +373,11 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                 } else {
                   const todayStr = format(today, 'yyyy-MM-dd');
                   const leaveDates = userLeaves.filter(l => l.seat_id == modalSeat.id).map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
-                  const futureLeaveDates = leaveDates.filter(d => d >= todayStr);
+                  const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(new Date(d)));
                   availableDates = futureLeaveDates.filter(d => !reservedDates.includes(d));
                 }
                 if (availableDates.length === 0) {
-                  return <div className="text-gray-500">No available dates for this seat.</div>;
+                  return <div className="text-gray-500">No available weekdays for this seat.</div>;
                 }
                 return (
                   <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
@@ -417,6 +417,12 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                   let errorMsg = '';
                   for (const date of modalDates) {
                     const dateStr = format(date, 'yyyy-MM-dd');
+                    // Check if it's a weekend
+                    if (isWeekend(date)) {
+                      success = false;
+                      errorMsg = 'Weekend bookings are not allowed.';
+                      break;
+                    }
                     const alreadyReserved = reservations.some(
                       r => String(r.seat_id) === String(modalSeat.id) && r.date === dateStr
                     );

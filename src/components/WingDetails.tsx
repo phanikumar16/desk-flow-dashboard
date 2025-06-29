@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,26 +7,88 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AvailableSeats from './AvailableSeats';
 import EmployeeDirectory from './EmployeeDirectory';
 import WingLayout from './WingLayout';
+import { supabase } from '../lib/supabaseClient';
+import { format, isWeekend } from 'date-fns';
 
 const WingDetails = () => {
   const { wingId } = useParams();
+  const [availableSeatsCount, setAvailableSeatsCount] = useState(0);
+  const [totalSeatsCount, setTotalSeatsCount] = useState(0);
   
   const wingData = {
     'a-tech': {
       name: 'A-Tech',
-      description: 'Technology & Development Teams',
-      totalSeats: 64,
-      availableSeats: 5
+      description: 'Technology & Development Teams'
     },
     'b-finance': {
       name: 'B-Finance', 
-      description: 'Finance & Operations Teams',
-      totalSeats: 48,
-      availableSeats: 8
+      description: 'Finance & Operations Teams'
     }
   };
 
   const wing = wingData[wingId as keyof typeof wingData];
+
+  useEffect(() => {
+    const fetchSeatCounts = async () => {
+      const { data: seats, error } = await supabase
+        .from('seats')
+        .select('*');
+      
+      if (!error && seats) {
+        // Filter seats for this wing (assuming wing prefix in seat number)
+        const wingSeats = seats.filter(seat => 
+          seat.seat_number.startsWith(wingId === 'a-tech' ? 'A' : 'B')
+        );
+        
+        setTotalSeatsCount(wingSeats.length);
+
+        // Calculate available seats
+        const { data: reservations } = await supabase
+          .from('reservations')
+          .select('*')
+          .eq('status', 'active');
+
+        const { data: userLeaves } = await supabase
+          .from('user_leaves')
+          .select('*');
+
+        const today = new Date();
+        const todayStr = format(today, 'yyyy-MM-dd');
+        const UNASSIGNED_SEATS = ['A01', 'A02', 'A49'];
+
+        let availableCount = 0;
+
+        wingSeats.forEach(seat => {
+          const isUnassigned = UNASSIGNED_SEATS.includes(seat.seat_number);
+          
+          if (isUnassigned) {
+            // Check if seat is not reserved today
+            const reservedToday = reservations?.some(r => 
+              r.seat_id === seat.id && r.date === todayStr
+            );
+            if (!reservedToday && !isWeekend(today)) {
+              availableCount++;
+            }
+          } else {
+            // Check if assigned employee is on leave today
+            const onLeaveToday = userLeaves?.some(l => 
+              l.seat_id == seat.id && l.date === todayStr
+            );
+            const reservedToday = reservations?.some(r => 
+              r.seat_id === seat.id && r.date === todayStr
+            );
+            if (onLeaveToday && !reservedToday && !isWeekend(today)) {
+              availableCount++;
+            }
+          }
+        });
+
+        setAvailableSeatsCount(availableCount);
+      }
+    };
+
+    fetchSeatCounts();
+  }, [wingId]);
 
   if (!wing) {
     return <div>Wing not found</div>;
@@ -70,11 +132,11 @@ const WingDetails = () => {
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <div className="flex items-center space-x-4">
                 <div className="text-center bg-blue-50 p-3 rounded-xl">
-                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">{wing.totalSeats}</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">{totalSeatsCount}</div>
                   <div className="text-xs sm:text-sm text-gray-600">Total Seats</div>
                 </div>
                 <div className="text-center bg-green-50 p-3 rounded-xl">
-                  <div className="text-2xl sm:text-3xl font-bold text-green-600">{wing.availableSeats}</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-green-600">{availableSeatsCount}</div>
                   <div className="text-xs sm:text-sm text-gray-600">Available</div>
                 </div>
               </div>
@@ -83,18 +145,18 @@ const WingDetails = () => {
         </div>
 
         <Tabs defaultValue="available-seats" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 sm:mb-8 h-auto sm:h-12 bg-white/80 backdrop-blur-md border border-white/20">
-            <TabsTrigger value="available-seats" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+          <TabsList className="grid w-full grid-cols-3 mb-6 sm:mb-8 h-auto sm:h-12 bg-gradient-to-r from-blue-100 to-purple-100 backdrop-blur-md border-2 border-blue-200/50 shadow-lg">
+            <TabsTrigger value="available-seats" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-white/50 transition-all">
               <span>📅</span>
               <span className="hidden sm:inline">Available Seats</span>
               <span className="sm:hidden">Seats</span>
             </TabsTrigger>
-            <TabsTrigger value="employee-directory" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+            <TabsTrigger value="employee-directory" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-white/50 transition-all">
               <span>👥</span>
               <span className="hidden sm:inline">Employee Directory</span>
               <span className="sm:hidden">Directory</span>
             </TabsTrigger>
-            <TabsTrigger value="wing-layout" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+            <TabsTrigger value="wing-layout" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-white/50 transition-all">
               <span>🗺️</span>
               <span className="hidden sm:inline">Wing Layout</span>
               <span className="sm:hidden">Layout</span>

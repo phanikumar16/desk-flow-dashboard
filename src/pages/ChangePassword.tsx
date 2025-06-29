@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -32,18 +33,27 @@ const ChangePassword: React.FC = () => {
     setLoading(true);
     setError('');
     setSuccess('');
-    const { data, error } = await supabase.auth.verifyOtp({
+    const { error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
-      type: 'email',
-      options: { password: newPassword },
+      type: 'email'
     });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
+    
+    if (!error) {
+      // Update password after successful OTP verification
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (updateError) {
+        setError(updateError.message);
+      } else {
+        setSuccess('Password changed successfully! You can now log in.');
+      }
     } else {
-      setSuccess('Password changed successfully! You can now log in.');
+      setError(error.message);
     }
+    setLoading(false);
   };
 
   return (
@@ -92,4 +102,4 @@ const ChangePassword: React.FC = () => {
   );
 };
 
-export default ChangePassword; 
+export default ChangePassword;
