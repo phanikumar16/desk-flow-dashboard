@@ -229,6 +229,9 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
 
   console.log('displayedSeats:', displayedSeats);
 
+  // Check if today is weekend
+  const isWeekendToday = isWeekend(today);
+
   return (
     <div 
       className="space-y-4 sm:space-y-6"
@@ -245,10 +248,19 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Available Seats</h2>
-            <p className="text-sm sm:text-base text-gray-600">{displayedSeats.length} seats available for booking in A-Tech</p>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              Includes unassigned seats and seats where employees are on leave or working from home
-            </p>
+            {isWeekendToday ? (
+              <div className="mt-2">
+                <p className="text-lg font-semibold text-orange-600 mb-1">🏖️ Holiday - Weekend</p>
+                <p className="text-sm text-gray-600">Booking is still available for weekend days</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm sm:text-base text-gray-600">{displayedSeats.length} seats available for booking in A-Tech</p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                  Includes unassigned seats and seats where employees are on leave or working from home
+                </p>
+              </>
+            )}
           </div>
           <div className="text-left sm:text-right">
             <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600 bg-white/50 px-3 py-2 rounded-full">
