@@ -335,7 +335,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Select dates for reservation:
+                Select dates for reservation (excluding weekends):
               </label>
               {modalSeat && (() => {
                 const isUnassigned = UNASSIGNED_SEATS.includes(modalSeat.seat_number);
@@ -354,16 +354,16 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                 let availableDates: string[] = [];
                 if (isUnassigned) {
                   availableDates = days
-                    .filter(d => d >= today && !reservedDates.includes(format(d, 'yyyy-MM-dd')))
+                    .filter(d => d >= today && !reservedDates.includes(format(d, 'yyyy-MM-dd')) && !isWeekend(d))
                     .map(d => format(d, 'yyyy-MM-dd'));
                 } else {
                   const todayStr = format(today, 'yyyy-MM-dd');
                   const leaveDates = userLeaves.filter(l => l.seat_id == modalSeat.id).map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
-                  const futureLeaveDates = leaveDates.filter(d => d >= todayStr);
+                  const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(new Date(d)));
                   availableDates = futureLeaveDates.filter(d => !reservedDates.includes(d));
                 }
                 if (availableDates.length === 0) {
-                  return <div className="text-gray-500">No available dates for this seat.</div>;
+                  return <div className="text-gray-500">No available weekdays for this seat.</div>;
                 }
                 return (
                   <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -24,22 +25,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
   if (wingId === 'a-tech') {
     return (
       <div className="space-y-6">
-        {/* Warning and Preview Button for small screens */}
-        {showPreviewWarning && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg flex items-center justify-between mb-2">
-            <div className="text-yellow-800 text-sm font-medium">
-              Due to your screen size, the layout may not display correctly. Click 'Preview' to see the correct image.
-            </div>
-            <Button
-              onClick={() => setIsPreviewOpen(true)}
-              variant="outline"
-              className="ml-4 flex items-center space-x-2 bg-white border-yellow-400 text-yellow-800 hover:bg-yellow-100"
-            >
-              <Maximize2 className="w-4 h-4" />
-              <span>Preview</span>
-            </Button>
-          </div>
-        )}
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
@@ -613,37 +598,397 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
             </div>
           </div>
         </div>
-
-        {/* Preview Modal */}
-        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-          <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex flex-col items-center justify-center">
-            <DialogHeader className="p-6 pb-0">
-              <DialogTitle className="flex items-center justify-between w-full">
-                <span>A-Tech Wing Layout - Full Size Preview</span>
-                <Button 
-                  onClick={() => setIsPreviewOpen(false)}
-                  variant="outline"
-                  size="sm"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </DialogTitle>
-            </DialogHeader>
-            <div className="flex-1 w-full flex items-center justify-center p-4">
-              <img
-                src="/wing-a-tech-preview.png"
-                alt="A-Tech Wing Layout Preview"
-                className="max-w-full max-h-[70vh] rounded-lg border shadow-lg object-contain"
-                style={{ background: '#fff' }}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     );
   }
 
-  // Default layout for other wings (like B-Finance)
+  if (wingId === 'b-finance') {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">B-Finance Wing Layout</h2>
+              <p className="text-gray-600">Interactive floor plan showing seat locations and availability</p>
+            </div>
+          </div>
+        </div>
+
+        {/* B Wing Layout Integration */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <style dangerouslySetInnerHTML={{
+            __html: `
+              .b-wing-layout * {
+                box-sizing: border-box;
+              }
+
+              .b-wing-layout {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                margin: 0;
+                padding: 20px;
+                background-color: #f5f5f5;
+                line-height: 1.4;
+              }
+
+              .b-wing-layout .page-title {
+                text-align: center;
+                color: #333;
+                margin-bottom: 30px;
+                font-size: 28px;
+                font-weight: 600;
+              }
+
+              .b-wing-layout .office-container {
+                max-width: 1000px;
+                margin: 0 auto;
+                background: white;
+                border: 3px solid #333;
+                border-radius: 10px;
+                padding: 20px 0px 10px 20px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+              }
+
+              .b-wing-layout .office-layout {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                position: relative;
+              }
+
+              .b-wing-layout .top-section {
+                display: flex;
+                gap: 15px;
+                align-items: stretch;
+              }
+
+              .b-wing-layout .meeting-room {
+                flex: 1;
+                padding: 25px;
+                text-align: center;
+                font-weight: bold;
+                font-size: 16px;
+                border-radius: 8px;
+                border: 2px solid #333;
+                background: linear-gradient(135deg, #FFE4B5, #F4A460);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+                cursor: pointer;
+              }
+
+              .b-wing-layout .meeting-room:hover {
+                transform: translateY(-3px) scale(1.02);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+                border-color: #FF8C00;
+              }
+
+              .b-wing-layout .server {
+                background: linear-gradient(135deg, #E6E6FA, #DDA0DD);
+              }
+
+              .b-wing-layout .server:hover {
+                transform: translateY(-3px) scale(1.02);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+                border-color: #9370DB;
+              }
+
+              .b-wing-layout .main-work-area {
+                display: flex;
+                gap: 0px;
+                align-items: flex-start;
+              }
+
+              .b-wing-layout .left-section {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                min-width: 200px;
+                align-items: flex-start;
+                margin-left: -20px;
+              }
+
+              .b-wing-layout .left-top-row {
+                display: flex;
+                gap: 0px;
+                align-items: flex-start;
+              }
+
+              .b-wing-layout .middle-section {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                flex: 1;
+                margin-left: 120px;
+              }
+
+              .b-wing-layout .middle-row {
+                display: flex;
+                gap: 5px;
+                width: 100%;
+              }
+
+              .b-wing-layout .middle-left, .b-wing-layout .middle-right {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+              }
+
+              .b-wing-layout .right-section {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                min-width: 350px;
+              }
+
+              .b-wing-layout .pantry {
+                background: #f0f0f0;
+                border: 2px solid #999;
+                border-radius: 8px;
+                padding: 20px;
+                text-align: center;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 80px;
+                transition: all 0.3s ease;
+                cursor: pointer;
+              }
+
+              .b-wing-layout .pantry:hover {
+                transform: translateY(-2px) scale(1.02);
+                background: #e8e8e8;
+                border-color: #666;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+              }
+
+              .b-wing-layout .desk-block {
+                background: linear-gradient(135deg, #E6F3FF, #B3D9FF);
+                border: 2px solid #0066CC;
+                border-radius: 8px;
+                padding: 12px;
+                display: grid;
+                gap: 8px;
+                transition: all 0.3s ease;
+                cursor: pointer;
+              }
+
+              .b-wing-layout .desk-block:hover {
+                transform: translateY(-2px) scale(1.01);
+                box-shadow: 0 4px 8px rgba(0,102,204,0.2);
+                border-color: #004499;
+              }
+
+              .b-wing-layout .desk-block-2v-small {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+                width: 50px;
+              }
+
+              .b-wing-layout .desk-block-4 {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+                width: 140px;
+              }
+
+              .b-wing-layout .desk-block-2h {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr;
+                width: 140px;
+                height: 60px;
+              }
+
+              .b-wing-layout .desk-block-3l, .b-wing-layout .desk-block-3l-normal {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+                width: 140px;
+                height: 120px;
+              }
+
+              .b-wing-layout .desk-block-3l .desk:nth-child(1),
+              .b-wing-layout .desk-block-3l-normal .desk:nth-child(1) { grid-column: 1; grid-row: 1; }
+              .b-wing-layout .desk-block-3l .desk:nth-child(2),
+              .b-wing-layout .desk-block-3l-normal .desk:nth-child(2) { grid-column: 2; grid-row: 1; }
+              .b-wing-layout .desk-block-3l .desk:nth-child(3) { grid-column: 1; grid-row: 2; }
+              .b-wing-layout .desk-block-3l-normal .desk:nth-child(3) { grid-column: 2; grid-row: 2; }
+
+              .b-wing-layout .desk {
+                background: white;
+                border: 1px solid #0066CC;
+                border-radius: 4px;
+                padding: 8px;
+                text-align: center;
+                font-size: 12px;
+                font-weight: bold;
+                color: #0066CC;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 35px;
+                transition: all 0.2s ease;
+                cursor: pointer;
+              }
+
+              .b-wing-layout .desk:hover {
+                transform: translateY(-1px) scale(1.05);
+                background: #E6F3FF;
+                border-color: #004499;
+                color: #004499;
+                box-shadow: 0 2px 4px rgba(0,102,204,0.3);
+              }
+
+              .b-wing-layout .walking-area {
+                background: linear-gradient(135deg, #f8f8f8, #e8e8e8);
+                border: 1px dashed #ccc;
+                border-radius: 5px;
+                padding: 10px;
+                text-align: center;
+                font-size: 12px;
+                color: #666;
+                font-style: italic;
+                transition: all 0.3s ease;
+                cursor: pointer;
+              }
+
+              .b-wing-layout .walking-area:hover {
+                transform: translateY(-1px);
+                background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+                border-color: #999;
+                color: #333;
+              }
+
+              .b-wing-layout .walking-horizontal {
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              }
+
+              .b-wing-layout .walking-vertical {
+                width: 30px;
+              }
+            `
+          }} />
+          <div className="b-wing-layout">
+            <h1 className="page-title">B-WING OFFICE LAYOUT</h1>
+            <div className="office-container">
+              <div className="office-layout">
+                {/* Top Section */}
+                <div className="top-section">
+                  <div className="meeting-room">LOTUS</div>
+                  <div className="meeting-room">PEONY</div>
+                  <div className="meeting-room">IRIS</div>
+                  <div className="meeting-room server">SERVER</div>
+                </div>
+                {/* Walking Area */}
+                <div className="walking-area walking-horizontal">Walking Area</div>
+                {/* Main Work Area */}
+                <div className="main-work-area">
+                  {/* Left Section */}
+                  <div className="left-section">
+                    <div className="left-top-row">
+                      <div className="desk-block desk-block-2v-small">
+                        <div className="desk">1</div>
+                        <div className="desk">2</div>
+                      </div>
+                      <div className="desk-block desk-block-4">
+                        <div className="desk">3</div>
+                        <div className="desk">4</div>
+                        <div className="desk">5</div>
+                        <div className="desk">6</div>
+                      </div>
+                    </div>
+                    <div className="desk-block desk-block-4" style={{marginLeft: '75px'}}>
+                      <div className="desk">7</div>
+                      <div className="desk">8</div>
+                      <div className="desk">9</div>
+                      <div className="desk">10</div>
+                    </div>
+                    <div className="desk-block desk-block-3l" style={{marginLeft: '75px'}}>
+                      <div className="desk">11</div>
+                      <div className="desk">12</div>
+                      <div className="desk">13</div>
+                    </div>
+                  </div>
+                  {/* Middle Section */}
+                  <div className="middle-section">
+                    <div className="middle-row">
+                      {/* Middle Left: Desks 14–25 */}
+                      <div className="middle-left">
+                        <div className="desk-block desk-block-4">
+                          <div className="desk">14</div>
+                          <div className="desk">15</div>
+                          <div className="desk">16</div>
+                          <div className="desk">17</div>
+                        </div>
+                        <div className="desk-block desk-block-4">
+                          <div className="desk">18</div>
+                          <div className="desk">19</div>
+                          <div className="desk">20</div>
+                          <div className="desk">21</div>
+                        </div>
+                        <div className="desk-block desk-block-4">
+                          <div className="desk">22</div>
+                          <div className="desk">23</div>
+                          <div className="desk">24</div>
+                          <div className="desk">25</div>
+                        </div>
+                      </div>
+                      {/* Middle Right: Desks 26–36 */}
+                      <div className="middle-right">
+                        <div className="desk-block" style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', width: '140px', height: '120px', gap: '8px'}}>
+                          <div className="desk" style={{gridColumn: '1', gridRow: '1'}}>26</div>
+                          <div className="desk" style={{gridColumn: '1', gridRow: '2'}}>27</div>
+                          <div className="desk" style={{gridColumn: '2', gridRow: '2'}}>28</div>
+                        </div>
+                        <div className="desk-block desk-block-4">
+                          <div className="desk">29</div>
+                          <div className="desk">30</div>
+                          <div className="desk">31</div>
+                          <div className="desk">32</div>
+                        </div>
+                        <div className="desk-block desk-block-4">
+                          <div className="desk">33</div>
+                          <div className="desk">34</div>
+                          <div className="desk">35</div>
+                          <div className="desk">36</div>
+                        </div>
+                      </div>
+                      {/* Right Section: Desks 37–44 (aligned directly beside middle) */}
+                      <div className="right-section">
+                        <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+                          <div className="pantry" style={{marginRight: '10px'}}>PANTRY</div>
+                        </div>
+                        <div className="desk-block desk-block-2h">
+                          <div className="desk">37</div>
+                          <div className="desk">38</div>
+                        </div>
+                        <div className="desk-block desk-block-4">
+                          <div className="desk">39</div>
+                          <div className="desk">40</div>
+                          <div className="desk">41</div>
+                          <div className="desk">42</div>
+                        </div>
+                        <div className="desk-block desk-block-2h">
+                          <div className="desk">43</div>
+                          <div className="desk">44</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default layout for other wings
   return (
     <div className="space-y-6">
       {/* Header */}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -140,7 +139,7 @@ const WingDetails = () => {
       }}
     >
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20">
+      <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -149,7 +148,7 @@ const WingDetails = () => {
               </div>
               <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">DeskSpace</h1>
             </div>
-            <Link to="/" className="text-blue-600 hover:text-blue-700 text-sm sm:text-base font-medium bg-white/50 px-4 py-2 rounded-full hover:bg-white/70 transition-all">
+            <Link to="/" className="text-blue-600 hover:text-blue-700 text-sm sm:text-base font-medium bg-white/70 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/90 transition-all border border-blue-200/50 shadow-sm">
               ← Back to Dashboard
             </Link>
           </div>
@@ -180,19 +179,19 @@ const WingDetails = () => {
         </div>
 
         <Tabs defaultValue="available-seats" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 sm:mb-8 h-auto sm:h-12 bg-gradient-to-r from-blue-100 to-purple-100 backdrop-blur-md border-2 border-blue-200/50 shadow-lg">
-            <TabsTrigger value="available-seats" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-white/50 transition-all">
-              <span>📅</span>
+          <TabsList className="grid w-full grid-cols-3 mb-6 sm:mb-8 h-16 sm:h-20 bg-white/80 backdrop-blur-md border-2 border-blue-200/50 shadow-xl rounded-2xl p-2">
+            <TabsTrigger value="available-seats" className="flex items-center space-x-2 text-sm sm:text-base lg:text-lg py-3 sm:py-4 px-4 sm:px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-white/70 transition-all rounded-xl font-semibold">
+              <span className="text-lg sm:text-xl">📅</span>
               <span className="hidden sm:inline">Available Seats</span>
               <span className="sm:hidden">Seats</span>
             </TabsTrigger>
-            <TabsTrigger value="employee-directory" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-white/50 transition-all">
-              <span>👥</span>
+            <TabsTrigger value="employee-directory" className="flex items-center space-x-2 text-sm sm:text-base lg:text-lg py-3 sm:py-4 px-4 sm:px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-white/70 transition-all rounded-xl font-semibold">
+              <span className="text-lg sm:text-xl">👥</span>
               <span className="hidden sm:inline">Employee Directory</span>
               <span className="sm:hidden">Directory</span>
             </TabsTrigger>
-            <TabsTrigger value="wing-layout" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-white/50 transition-all">
-              <span>🗺️</span>
+            <TabsTrigger value="wing-layout" className="flex items-center space-x-2 text-sm sm:text-base lg:text-lg py-3 sm:py-4 px-4 sm:px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-white/70 transition-all rounded-xl font-semibold">
+              <span className="text-lg sm:text-xl">🗺️</span>
               <span className="hidden sm:inline">Wing Layout</span>
               <span className="sm:hidden">Layout</span>
             </TabsTrigger>
