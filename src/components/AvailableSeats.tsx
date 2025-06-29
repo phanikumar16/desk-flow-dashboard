@@ -37,7 +37,6 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
   };
 
   useEffect(() => {
-    // Fetch seats from Supabase
     const fetchSeats = async () => {
       const { data, error } = await supabase
         .from('seats')
@@ -48,11 +47,10 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
     };
     fetchSeats();
 
-    // Fetch available users from Supabase
     const fetchAvailableUsers = async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*'); // No filter for debugging
+        .select('*');
       console.log('SUPABASE PROFILES DATA:', data);
       console.log('SUPABASE PROFILES ERROR:', error);
       if (!error && data) {
@@ -61,19 +59,16 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
     };
     fetchAvailableUsers();
 
-    // Get current user id
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserId(user?.id || null);
     });
 
-    // Fetch user_leaves
     const fetchUserLeaves = async () => {
       const { data, error } = await supabase.from('user_leaves').select('*');
       if (!error && data) setUserLeaves(data);
     };
     fetchUserLeaves();
 
-    // Subscribe to real-time changes in profiles
     const subscription = supabase
       .channel('public:profiles')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
@@ -81,13 +76,11 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
       })
       .subscribe();
 
-    // Subscribe to reservation changes
     const subscriptionReservations = supabase
       .channel('public:reservations')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, fetchReservations)
       .subscribe();
 
-    // Subscribe to user_leaves changes
     const subscriptionLeaves = supabase
       .channel('public:user_leaves')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_leaves' }, fetchUserLeaves)
@@ -119,7 +112,6 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
 
   const handleConfirmReservation = async () => {
     if (selectedSeat && selectedDates.length > 0) {
-      // Send update to backend
       await fetch(`http://localhost:4000/api/seats/${selectedSeat}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -161,10 +153,10 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
 
   const today = new Date();
   const currentDateString = format(today, 'EEEE, dd/MM/yyyy');
+  const isHoliday = isWeekend(today);
 
   console.log('EMPLOYEES:', availableSeats);
 
-  // Utility to generate a unique color for each seat (by id or cluster)
   function getColorFromString(str: string) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -174,25 +166,21 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
     return `hsl(${h}, 70%, 60%)`;
   }
 
-  // Helper: get reserved dates for a seat
   function getReservedDates(seatId: string) {
     return reservations.filter(r => r.seat_id === seatId && r.status === 'active').map(r => r.date);
   }
-  // Helper: get reservations for this user
+  
   function getUserReservations(seatId: string) {
     return reservations.filter(r => r.seat_id === seatId && r.user_id === userId && r.status === 'active');
   }
 
-  // Helper: get available (leave) dates for a seat
   function getAvailableDatesForSeat(seatId: any) {
     return userLeaves.filter(l => l.seat_id == seatId).map(l => l.date);
   }
 
-  // Booking handler
   async function handleBook(seat: any, dates: Date[]) {
     setLoading(true);
     for (const date of dates) {
-      // Only book if not already reserved
       const already = reservations.find(r => r.seat_id === seat.id && r.date === format(date, 'yyyy-MM-dd') && r.status === 'active');
       if (!already) {
         await supabase.from('reservations').insert({ seat_id: seat.id, user_id: userId, date: format(date, 'yyyy-MM-dd') });
@@ -202,18 +190,16 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
     setBookingSeat(null);
     setBookingDates([]);
   }
-  // Unbooking handler
+  
   async function handleUnbook(seat: any, date: string) {
     setLoading(true);
     await supabase.from('reservations').delete().match({ seat_id: seat.id, user_id: userId, date });
     setLoading(false);
   }
 
-  // Always include unassigned seats as available
   const UNASSIGNED_SEATS = ['A01', 'A02', 'A49'];
   const alwaysAvailableSeats = availableSeats.filter(seat => {
     if (!UNASSIGNED_SEATS.includes(seat.seat_number)) return false;
-    // Generate next 30 days (or as needed)
     const days = Array.from({length: 30}, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() + i);
@@ -227,7 +213,6 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
     return availableDays.length > 0;
   });
 
-  // For assigned seats, only show if there are future leave/WFH dates that are not fully reserved
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const assignedAvailableSeats = availableSeats.filter(seat => {
     if (UNASSIGNED_SEATS.includes(seat.seat_number)) return false;
@@ -238,7 +223,6 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
     return availableDates.length > 0;
   });
 
-  // Combine unassigned and assigned available seats
   const displayedSeats = [
     ...alwaysAvailableSeats,
     ...assignedAvailableSeats
@@ -246,20 +230,54 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
 
   console.log('displayedSeats:', displayedSeats);
 
+  if (isHoliday) {
+    return (
+      <div 
+        className="space-y-4 sm:space-y-6 min-h-96"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.05)), url('https://images.unsplash.com/photo-1501594907352-04cda38ebc29?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          borderRadius: '12px'
+        }}
+      >
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-8 text-center border border-white/20">
+          <div className="text-6xl mb-4">🏖️</div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Holiday!</h2>
+          <p className="text-lg text-gray-600 mb-2">
+            It's {format(today, 'EEEE')} - enjoy your weekend!
+          </p>
+          <p className="text-gray-500">
+            Seat reservations are available on weekdays only.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div 
+      className="space-y-4 sm:space-y-6"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.02), rgba(0,0,0,0.02)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        borderRadius: '12px',
+        padding: '20px'
+      }}
+    >
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+      <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-4 sm:p-6 border border-white/20">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Available Seats</h2>
-            <p className="text-sm sm:text-base text-gray-600">{availableSeats.length} seats available for booking in A-Tech</p>
+            <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Available Seats</h2>
+            <p className="text-sm sm:text-base text-gray-600">{displayedSeats.length} seats available for booking in A-Tech</p>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
               Includes unassigned seats and seats where employees are on leave or working from home
             </p>
           </div>
           <div className="text-left sm:text-right">
-            <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
+            <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600 bg-white/50 px-3 py-2 rounded-full">
               <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Today, {currentDateString}</span>
             </div>
@@ -271,12 +289,13 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {displayedSeats.length === 0 && (
           <div className="col-span-full text-center text-gray-500 py-8">
-            No users are currently present.
+            <div className="bg-white/90 backdrop-blur-md rounded-2xl p-8 border border-white/20">
+              No seats are currently available for booking.
+            </div>
           </div>
         )}
         {displayedSeats.map((seat) => {
           const isUnassigned = UNASSIGNED_SEATS.includes(seat.seat_number);
-          // Find available dates for assigned seats
           let availableDates: string[] = [];
           if (!isUnassigned) {
             const todayStr = format(new Date(), 'yyyy-MM-dd');
@@ -286,9 +305,9 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
             availableDates = futureLeaveDates.filter(d => !reservedDates.includes(d));
           }
           return (
-            <div key={seat.id} className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-start space-y-2 border border-gray-100">
+            <div key={seat.id} className="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl p-6 flex flex-col items-start space-y-2 border border-white/20 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
               <div className="flex items-center space-x-3 mb-2">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                   {seat.seat_number}
                 </div>
                 <div>
@@ -297,12 +316,12 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                 </div>
               </div>
               <div className="flex items-center space-x-4 text-sm">
-                <span className="text-gray-700 font-medium">{seat.location}</span>
+                <span className="text-gray-700 font-medium bg-gray-100 px-2 py-1 rounded-full">{seat.location}</span>
               </div>
               <button
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold"
+                className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 font-semibold shadow-lg transform hover:scale-105 transition-all"
                 onClick={async () => {
-                  await fetchReservations(); // Ensure reservations are up-to-date
+                  await fetchReservations();
                   setModalSeat(seat);
                   setModalDates([]);
                   setModalOpen(true);
@@ -323,16 +342,15 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
           setModalDates([]);
         }
       }}>
-        <DialogContent className="max-w-md mx-4">
+        <DialogContent className="max-w-md mx-4 bg-white/95 backdrop-blur-md border border-white/20">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Reserve Seat {modalSeat?.seat_number}</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Reserve Seat {modalSeat?.seat_number}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Select dates for reservation:
               </label>
-              {/* List available dates instead of calendar */}
               {modalSeat && (() => {
                 const isUnassigned = UNASSIGNED_SEATS.includes(modalSeat.seat_number);
                 const today = new Date();
@@ -344,7 +362,6 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                 const reservedDates = reservations
                   .filter(r => String(r.seat_id) === String(modalSeat.id) && r.status === 'active')
                   .map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
-                // Debug logging
                 console.log('modalSeat.id', modalSeat.id);
                 console.log('reservedDates', reservedDates);
                 console.log('reservations for seat', reservations.filter(r => String(r.seat_id) === String(modalSeat.id)));
@@ -365,7 +382,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                 return (
                   <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
                     {availableDates.map(dateStr => (
-                      <label key={dateStr} className="flex items-center gap-2">
+                      <label key={dateStr} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg">
                         <input
                           type="checkbox"
                           checked={modalDates.some(d => format(d, 'yyyy-MM-dd') === dateStr)}
@@ -376,6 +393,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                               setModalDates(modalDates.filter(d => format(d, 'yyyy-MM-dd') !== dateStr));
                             }
                           }}
+                          className="rounded"
                         />
                         <span>{format(new Date(dateStr), 'EEEE, MMMM dd, yyyy')}</span>
                       </label>
@@ -399,7 +417,6 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                   let errorMsg = '';
                   for (const date of modalDates) {
                     const dateStr = format(date, 'yyyy-MM-dd');
-                    // Prevent booking if already reserved for this seat/date (by anyone, legacy or new)
                     const alreadyReserved = reservations.some(
                       r => String(r.seat_id) === String(modalSeat.id) && r.date === dateStr
                     );

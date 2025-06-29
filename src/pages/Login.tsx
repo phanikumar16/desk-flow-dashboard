@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -21,61 +22,43 @@ const Login: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleLogin} className="max-w-sm mx-auto mt-16 p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
-      <input
-        className="w-full mb-2 p-2 border rounded"
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        required
-      />
-      <input
-        className="w-full mb-4 p-2 border rounded"
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-        required
-      />
-      <button
-        className="w-full bg-blue-600 text-white py-2 rounded font-semibold"
-        type="submit"
-        disabled={loading}
-      >
-        {loading ? 'Logging in...' : 'Login'}
-      </button>
-      {error && <div className="text-red-600 mt-2">{error}</div>}
-      <button
-        type="button"
-        className="w-full bg-gray-500 text-white py-2 rounded font-semibold mt-2"
-        disabled={loading}
-        onClick={async () => {
-          setLoading(true);
-          setError('');
-          try {
-            const response = await fetch('http://localhost:4000/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username: email, password }),
-            });
-            const data = await response.json();
-            if (data.success) {
-              window.location.href = '/dashboard';
-            } else {
-              setError(data.message || 'Legacy login failed');
-            }
-          } catch (err) {
-            setError('Network error');
-          }
-          setLoading(false);
-        }}
-      >
-        {loading ? 'Logging in...' : 'Legacy Login'}
-      </button>
-    </form>
+    <div 
+      className="min-h-screen flex items-center justify-center"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
+      <form onSubmit={handleLogin} className="max-w-sm mx-auto p-8 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20">
+        <h2 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Welcome Back</h2>
+        <input
+          className="w-full mb-4 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+          type="email"
+          placeholder="Email Address"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          required
+        />
+        <input
+          className="w-full mb-6 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          required
+        />
+        <button
+          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? 'Signing in...' : 'Sign In'}
+        </button>
+        {error && <div className="text-red-600 mt-3 text-center font-medium">{error}</div>}
+      </form>
+    </div>
   );
 };
 
-export default Login; 
+export default Login;

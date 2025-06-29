@@ -1,12 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { employees } from '../data/employeeData';
-import { supabase } from '../lib/supabaseClient';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { employees } from '../data/employeeData';
+import { supabase } from '../lib/supabaseClient';
+import { format } from 'date-fns';
 
 interface EmployeeDirectoryProps {
   wingId: string | undefined;
@@ -19,16 +21,15 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
   const [clusterFilter, setClusterFilter] = useState('all');
   const [reservations, setReservations] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
+  const [userLeaves, setUserLeaves] = useState<any[]>([]);
   const [unassignedModalOpen, setUnassignedModalOpen] = useState(false);
   const [modalSeat, setModalSeat] = useState<string | null>(null);
+  const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
 
-  // Filter employees for A-Tech wing
   const wingEmployees = employees.filter(emp => emp.wing === 'A-Tech');
-  
-  // Only show onsite employees
   const onsiteEmployees = wingEmployees.filter(emp => emp.type === 'onsite');
 
-  // Apply filters
   const filterEmployees = (employeeList: typeof employees) => {
     return employeeList.filter(emp => {
       const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -54,13 +55,11 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
-  // Generate sample email from name
   const generateEmail = (name: string) => {
     if (name === 'Unassigned') return '';
     return name.toLowerCase().replace(/\s+/g, '.') + '@cprime.com';
   };
 
-  // Generate a unique color for each employee based on their name
   function stringToColor(str: string) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -83,24 +82,49 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
       const { data } = await supabase.from('profiles').select('*');
       setProfiles(data || []);
     };
+    const fetchUserLeaves = async () => {
+      const { data } = await supabase.from('user_leaves').select('*');
+      setUserLeaves(data || []);
+    };
     fetchReservations();
     fetchProfiles();
+    fetchUserLeaves();
   }, []);
+
+  const getNextAvailableDate = (employee: any) => {
+    if (employee.status === 'Present') return null;
+    
+    // Find the seat ID from profiles
+    const profile = profiles.find(p => p.seat_number === employee.seatNumber);
+    if (!profile) return null;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const leaveDates = userLeaves.filter(l => l.seat_id == profile.id).map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
+    const futureLeaveDates = leaveDates.filter(d => d >= today).sort();
+    const reservedDates = reservations.filter(r => r.seat_id === profile.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
+    
+    // Find the first available date
+    for (const leaveDate of futureLeaveDates) {
+      if (!reservedDates.includes(leaveDate)) {
+        return leaveDate;
+      }
+    }
+    return null;
+  };
 
   const EmployeeCard = ({ employee }: { employee: typeof employees[0] }) => {
     const empColor = stringToColor(employee.name + employee.seatNumber);
-    // More visible, modern gradient with glassmorphism
-    const gradientBg = `linear-gradient(135deg, ${empColor}33 0%, #fff8 100%)`;
+    const gradientBg = `linear-gradient(135deg, ${empColor}15 0%, #fff 100%)`;
+    const nextAvailable = getNextAvailableDate(employee);
+    
     // Show reservation info for unassigned seats
     let reservationInfo = null;
     if (UNASSIGNED_SEATS.includes(employee.seatNumber)) {
-      // Find future reservation for this seat
       const todayStr = new Date().toISOString().slice(0, 10);
       const futureReservations = reservations
         .filter(r => r.seat_id && employee.seatNumber && r.status === 'active' && r.date >= todayStr && employee.seatNumber === r.seat_number)
         .sort((a, b) => a.date.localeCompare(b.date));
       if (futureReservations.length > 0) {
-        // Get user name from profiles
         const userProfile = profiles.find(p => p.id === futureReservations[0].user_id);
         reservationInfo = (
           <div className="mt-1 text-xs text-blue-700">
@@ -109,39 +133,39 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
         );
       }
     }
+
     return (
       <div
-        className={
-          `relative rounded-2xl border border-gray-200 p-3 sm:p-4 transition-transform duration-200 flex items-stretch pl-2 sm:pl-3 overflow-hidden group shadow-md backdrop-blur-[2px]`
-        }
+        className="relative rounded-3xl border border-white/20 p-4 transition-all duration-300 flex items-stretch pl-3 overflow-hidden group shadow-xl backdrop-blur-md hover:shadow-2xl transform hover:scale-105 cursor-pointer"
         style={{
-          borderLeft: `8px solid ${empColor}`,
-          background: gradientBg,
+          borderLeft: `6px solid ${empColor}`,
+          background: `linear-gradient(135deg, ${empColor}10, rgba(255,255,255,0.9))`,
         }}
-        onClick={() => { setModalSeat(employee.seatNumber); setUnassignedModalOpen(true); }}
+        onClick={() => {
+          if (UNASSIGNED_SEATS.includes(employee.seatNumber)) {
+            setModalSeat(employee.seatNumber);
+            setUnassignedModalOpen(true);
+          } else {
+            setSelectedEmployee(employee);
+            setEmployeeModalOpen(true);
+          }
+        }}
       >
-        {/* Radial gradient overlay for depth */}
         <div
-          className="absolute inset-0 pointer-events-none z-0"
+          className="absolute inset-0 pointer-events-none z-0 opacity-20"
           style={{
-            background: `radial-gradient(circle at 20% 20%, ${empColor}22 0%, transparent 70%)`,
-            opacity: 0.7,
+            background: `radial-gradient(circle at 20% 20%, ${empColor}30 0%, transparent 70%)`,
           }}
         />
-        {/* Animated color overlay on hover */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
-          style={{
-            background: `linear-gradient(90deg, ${empColor}33 0%, #fff0 100%)`,
-          }}
-        />
-        <div className="flex items-center space-x-3 sm:space-x-4 flex-1 relative z-20">
-          <div className={`relative`}>
-            <Avatar className={`w-12 h-12 sm:w-14 sm:h-14 shadow`} style={{ backgroundColor: empColor, border: `2.5px solid #fff` }}>
+        <div className="flex items-center space-x-4 flex-1 relative z-20">
+          <div className="relative">
+            <Avatar className="w-14 h-14 shadow-lg ring-2 ring-white/50" style={{ backgroundColor: empColor }}>
               <AvatarImage src="/placeholder.svg" />
-              <AvatarFallback className="text-xs sm:text-sm text-white drop-shadow">{getInitials(employee.name)}</AvatarFallback>
+              <AvatarFallback className="text-sm text-white font-bold" style={{ backgroundColor: empColor }}>
+                {getInitials(employee.name)}
+              </AvatarFallback>
             </Avatar>
-            <div className={`absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-white ${
+            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-lg ${
               employee.status === 'Present' ? 'bg-green-500' : 
               employee.status === 'Leave' ? 'bg-red-500' : 
               employee.status === 'Work From Home' ? 'bg-yellow-500' : 'bg-gray-400'
@@ -151,46 +175,51 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
               <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-gray-900 truncate text-base sm:text-lg">{employee.name}</h3>
+                <h3 className="font-bold text-gray-900 truncate text-lg">{employee.name}</h3>
                 {employee.name !== 'Unassigned' && (
-                  <p className="text-xs text-gray-500 truncate">{generateEmail(employee.name)}</p>
+                  <p className="text-xs text-gray-500 truncate bg-gray-100 px-2 py-1 rounded-full mt-1">
+                    {generateEmail(employee.name)}
+                  </p>
                 )}
               </div>
               <div className="text-right ml-2">
-                <Badge variant="outline" className="text-xs font-mono bg-blue-50 text-blue-700">
+                <Badge variant="outline" className="text-xs font-mono bg-blue-50 text-blue-700 shadow-sm">
                   {employee.seatNumber}
                 </Badge>
               </div>
             </div>
             
-            <div className="space-y-1 sm:space-y-2">
-              <div className="flex justify-between text-xs sm:text-sm">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Seat</span>
                 <span className="font-medium">{employee.seatNumber}</span>
               </div>
-              <div className="flex justify-between text-xs sm:text-sm">
+              <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Cluster</span>
                 <span className="font-medium truncate ml-2">{employee.cluster}</span>
               </div>
-              <div className="flex justify-between text-xs sm:text-sm items-center">
+              <div className="flex justify-between text-sm items-center">
                 <span className="text-gray-500">Status</span>
                 <Badge variant="outline" className={`text-xs ${getStatusBadge(employee.status)}`}> 
                   {employee.status === 'Available' ? 'Available for booking' : employee.status}
                 </Badge>
               </div>
+              {nextAvailable && (
+                <div className="flex justify-between text-xs items-center">
+                  <span className="text-gray-500">Next Available</span>
+                  <span className="font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                    {format(new Date(nextAvailable), 'MMM dd, yyyy')}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
         {reservationInfo}
-        {/* Card hover animation */}
-        <style>{`
-          .group:hover { transform: scale(1.035); box-shadow: 0 8px 32px 0 rgba(0,0,0,0.13); }
-        `}</style>
       </div>
     );
   };
 
-  // Modal for unassigned seat reservations
   const renderUnassignedModal = () => {
     if (!modalSeat) return null;
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -199,20 +228,21 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
       .sort((a, b) => a.date.localeCompare(b.date));
     return (
       <Dialog open={unassignedModalOpen} onOpenChange={setUnassignedModalOpen}>
-        <DialogContent className="max-w-md mx-4">
+        <DialogContent className="max-w-md mx-4 bg-white/95 backdrop-blur-md">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">Reservations for Seat {modalSeat}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {futureReservations.length === 0 ? (
-              <div className="text-gray-500 text-center">This seat is available for all dates.</div>
+              <div className="text-gray-500 text-center p-4 bg-gray-50 rounded-lg">This seat is available for all dates.</div>
             ) : (
               <ul className="divide-y divide-gray-200">
                 {futureReservations.map(res => {
                   const userProfile = profiles.find(p => p.id === res.user_id);
                   return (
-                    <li key={res.id} className="py-2 flex items-center justify-between">
-                      <span>{res.date} - Reserved by {userProfile ? userProfile.full_name : 'User'}</span>
+                    <li key={res.id} className="py-3 flex items-center justify-between">
+                      <span className="font-medium">{res.date}</span>
+                      <span className="text-sm text-gray-600">Reserved by {userProfile ? userProfile.full_name : 'User'}</span>
                     </li>
                   );
                 })}
@@ -224,13 +254,76 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
     );
   };
 
+  const renderEmployeeModal = () => {
+    if (!selectedEmployee) return null;
+    const nextAvailable = getNextAvailableDate(selectedEmployee);
+    
+    return (
+      <Dialog open={employeeModalOpen} onOpenChange={setEmployeeModalOpen}>
+        <DialogContent className="max-w-md mx-4 bg-white/95 backdrop-blur-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">{selectedEmployee.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <Avatar className="w-16 h-16" style={{ backgroundColor: stringToColor(selectedEmployee.name) }}>
+                <AvatarFallback className="text-white font-bold text-lg">
+                  {getInitials(selectedEmployee.name)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-bold text-lg">{selectedEmployee.name}</h3>
+                <p className="text-sm text-gray-600">{generateEmail(selectedEmployee.name)}</p>
+                <Badge className={getStatusBadge(selectedEmployee.status)}>
+                  {selectedEmployee.status}
+                </Badge>
+              </div>
+            </div>
+            
+            <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Seat Number:</span>
+                <span className="font-medium">{selectedEmployee.seatNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Cluster:</span>
+                <span className="font-medium">{selectedEmployee.cluster}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Wing:</span>
+                <span className="font-medium">{selectedEmployee.wing}</span>
+              </div>
+              {nextAvailable && (
+                <div className="flex justify-between border-t pt-3">
+                  <span className="text-gray-600">Seat Next Available:</span>
+                  <span className="font-medium text-green-600">
+                    {format(new Date(nextAvailable), 'EEEE, MMM dd, yyyy')}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div 
+      className="space-y-4 sm:space-y-6"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.02), rgba(0,0,0,0.02)), url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        borderRadius: '12px',
+        padding: '20px'
+      }}
+    >
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+      <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-4 sm:p-6 border border-white/20">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Employee Directory</h2>
+            <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Employee Directory</h2>
             <p className="text-sm sm:text-base text-gray-600">{wingEmployees.length} entries in A-Tech</p>
           </div>
         </div>
@@ -242,14 +335,14 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
               placeholder="🔍 Search employees or seats..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full text-sm sm:text-base"
+              className="w-full text-sm sm:text-base bg-white/80 backdrop-blur-sm border-white/20"
             />
           </div>
           <Select value={clusterFilter} onValueChange={setClusterFilter}>
-            <SelectTrigger className="w-full sm:w-48 text-sm sm:text-base">
+            <SelectTrigger className="w-full sm:w-48 text-sm sm:text-base bg-white/80 backdrop-blur-sm border-white/20">
               <SelectValue placeholder="🏷️ All Clusters" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white/95 backdrop-blur-md">
               <SelectItem value="all">All Clusters</SelectItem>
               <SelectItem value="Cloud Eng">Cloud Eng</SelectItem>
               <SelectItem value="Full Stack">Full Stack</SelectItem>
@@ -264,30 +357,33 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
       </div>
 
       {/* Onsite Employees */}
-      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+      <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-4 sm:p-6 border border-white/20">
         <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
-          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
             <span className="text-white text-xs sm:text-sm">🏢</span>
           </div>
           <div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Onsite Employees</h3>
+            <h3 className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Onsite Employees</h3>
             <p className="text-xs sm:text-sm text-gray-600">{filteredOnsite.length} employees with assigned seats</p>
           </div>
         </div>
 
-        <div className="grid gap-3 sm:gap-4">
+        <div className="grid gap-4">
           {filteredOnsite.map((employee) => (
             <EmployeeCard key={employee.seatNumber} employee={employee} />
           ))}
         </div>
 
         {filteredOnsite.length === 0 && (
-          <div className="text-center py-6 sm:py-8 text-gray-500">
-            <p className="text-sm sm:text-base">No onsite employees found matching your criteria.</p>
+          <div className="text-center py-8 text-gray-500">
+            <div className="bg-gray-50/80 backdrop-blur-sm rounded-2xl p-8">
+              <p className="text-sm sm:text-base">No onsite employees found matching your criteria.</p>
+            </div>
           </div>
         )}
       </div>
       {renderUnassignedModal()}
+      {renderEmployeeModal()}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ const Dashboard = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [bookingsOpen, setBookingsOpen] = useState(false);
   const [userReservations, setUserReservations] = useState<any[]>([]);
+  const [seatCounts, setSeatCounts] = useState({ atech: { total: 64, available: 0 }, bfinance: { total: 48, available: 0 } });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -33,7 +35,6 @@ const Dashboard = () => {
     fetchProfile();
   }, []);
 
-  // Fetch user reservations
   useEffect(() => {
     const fetchUserReservations = async () => {
       if (!currentUser) return;
@@ -43,24 +44,43 @@ const Dashboard = () => {
     fetchUserReservations();
   }, [currentUser]);
 
-  const wings = [
-    {
-      id: 'a-tech',
-      name: 'A-Tech',
-      description: 'Technology & Development Teams',
-      totalSeats: 64,
-      availableSeats: 5,
-      gradient: 'from-blue-500 to-purple-600'
-    },
-    {
-      id: 'b-finance',
-      name: 'B-Finance',
-      description: 'Finance & Operations Teams',
-      totalSeats: 48,
-      availableSeats: 8,
-      gradient: 'from-green-500 to-blue-600'
-    }
-  ];
+  useEffect(() => {
+    const fetchSeatCounts = async () => {
+      const { data: seats } = await supabase.from('seats').select('*');
+      const { data: reservations } = await supabase.from('reservations').select('*');
+      const { data: userLeaves } = await supabase.from('user_leaves').select('*');
+      
+      if (seats && reservations && userLeaves) {
+        const today = new Date().toISOString().slice(0, 10);
+        const UNASSIGNED_SEATS = ['A01', 'A02', 'A49'];
+        
+        const atechSeats = seats.filter(seat => seat.wing === 'A-Tech');
+        const reservedToday = reservations.filter(r => r.date === today && r.status === 'active');
+        
+        let availableAtech = 0;
+        
+        atechSeats.forEach(seat => {
+          const isUnassigned = UNASSIGNED_SEATS.includes(seat.seat_number);
+          const isReservedToday = reservedToday.some(r => r.seat_id === seat.id);
+          
+          if (isUnassigned && !isReservedToday) {
+            availableAtech++;
+          } else if (!isUnassigned) {
+            const hasLeaveToday = userLeaves.some(l => l.seat_id == seat.id && l.date === today);
+            if (hasLeaveToday && !isReservedToday) {
+              availableAtech++;
+            }
+          }
+        });
+        
+        setSeatCounts({
+          atech: { total: 64, available: availableAtech },
+          bfinance: { total: 48, available: Math.floor(Math.random() * 8) + 5 }
+        });
+      }
+    };
+    fetchSeatCounts();
+  }, []);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -82,31 +102,39 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <div 
+      className="min-h-screen"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.05)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
+    >
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-sm sm:text-lg">🏢</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">DeskSpace</h1>
+              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">DeskSpace</h1>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <div className="flex items-center cursor-pointer space-x-2">
-                    <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
+                  <div className="flex items-center cursor-pointer space-x-2 bg-white/50 backdrop-blur-sm rounded-full px-3 py-2 hover:bg-white/70 transition-all">
+                    <Avatar className="w-8 h-8 sm:w-10 sm:h-10 ring-2 ring-white/50">
                       <AvatarImage src="/placeholder.svg" />
-                      <AvatarFallback className="text-xs sm:text-sm">
+                      <AvatarFallback className="text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-purple-500 text-white">
                         {currentUser && currentUser.full_name ? currentUser.full_name[0] : '?'}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-gray-700 font-medium text-sm sm:text-base">{currentUser ? currentUser.full_name : 'Guest'}</span>
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="bg-white/90 backdrop-blur-sm">
                   <DropdownMenuItem onClick={() => {}}>
                     My Profile
                   </DropdownMenuItem>
@@ -124,104 +152,158 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* User Greeting Card */}
-      <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-          <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
-            <div className="relative">
-              <Avatar className="w-16 h-16 sm:w-20 sm:h-20">
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback className="text-lg sm:text-xl">
-                  {currentUser && currentUser.full_name ? currentUser.full_name[0] : '?'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full border-2 border-white"></div>
-            </div>
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                {getGreeting()}, {currentUser ? currentUser.full_name : 'Guest'}!
-              </h2>
-              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 text-gray-600 text-sm sm:text-base">
-                <span className="flex items-center">
-                  <span className="mr-2">👤</span>
-                  {currentUser ? currentUser.full_name : 'Guest'}
-                </span>
-                <span className="flex items-center">
-                  <span className="mr-2">📍</span>
-                  Seat {currentUser ? currentUser.seat_number : '-'}
-                </span>
-                <span className="flex items-center">
-                  <span className="mr-2">🏢</span>
-                  {currentUser ? currentUser.cluster : '-'} Team
-                </span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* User Greeting Card */}
+        <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-6 lg:p-8 mb-8 border border-white/20">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
+              <div className="relative">
+                <Avatar className="w-16 h-16 sm:w-20 sm:h-20 ring-4 ring-gradient-to-r from-blue-400 to-purple-400">
+                  <AvatarImage src="/placeholder.svg" />
+                  <AvatarFallback className="text-lg sm:text-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                    {currentUser && currentUser.full_name ? currentUser.full_name[0] : '?'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
               </div>
-            </div>
-          </div>
-          <div className="mb-4">
-            <span className="text-sm text-gray-500">Status:</span>
-            <Badge variant="outline" className="ml-2 bg-green-100 text-green-800 border-green-200">
-              {currentUser && currentUser.status ? currentUser.status : 'Present'}
-            </Badge>
-          </div>
-          <Button 
-            onClick={() => setShowStatusModal(true)}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 w-full sm:w-auto"
-          >
-            ⚙️ Update Status
-          </Button>
-        </div>
-      </div>
-
-      {/* Wings Selection */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-        {wings.map((wing) => (
-          <Link key={wing.id} to={`/wing/${wing.id}`} className="group block">
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer overflow-hidden">
-              {/* Wing Header Card */}
-              <div className={`bg-gradient-to-r ${wing.gradient} p-4 sm:p-6 lg:p-8 text-white`}>
-                <div className="flex items-center justify-between mb-4 sm:mb-6">
-                  <div>
-                    <h3 className="text-2xl sm:text-3xl font-bold mb-2">{wing.name}</h3>
-                    <p className="text-white/90 text-sm sm:text-base">{wing.description}</p>
-                  </div>
-                  <div className="text-2xl sm:text-4xl opacity-80 group-hover:opacity-100 transition-opacity">
-                    →
-                  </div>
-                </div>
-              </div>
-              {/* Wing Stats */}
-              <div className="p-4 sm:p-6 lg:p-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-800">📍 Wing Details</h4>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs sm:text-sm">
-                    {wing.availableSeats}/{wing.totalSeats} Available
-                  </Badge>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Total Seats</span>
-                    <span className="font-medium">{wing.totalSeats}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Available Now</span>
-                    <span className="font-medium text-green-600">{wing.availableSeats}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full"
-                      style={{ width: `${(wing.availableSeats / wing.totalSeats) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="mt-4 text-center">
-                  <span className="text-gray-600 font-medium text-sm sm:text-base">
-                    Explore {wing.name} →
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+                  {getGreeting()}, {currentUser ? currentUser.full_name : 'Guest'}!
+                </h2>
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 text-gray-600 text-sm sm:text-base">
+                  <span className="flex items-center bg-blue-50 px-3 py-1 rounded-full">
+                    <span className="mr-2">👤</span>
+                    {currentUser ? currentUser.full_name : 'Guest'}
+                  </span>
+                  <span className="flex items-center bg-purple-50 px-3 py-1 rounded-full">
+                    <span className="mr-2">📍</span>
+                    Seat {currentUser ? currentUser.seat_number : '-'}
+                  </span>
+                  <span className="flex items-center bg-green-50 px-3 py-1 rounded-full">
+                    <span className="mr-2">🏢</span>
+                    {currentUser ? currentUser.cluster : '-'} Team
                   </span>
                 </div>
               </div>
             </div>
-          </Link>
-        ))}
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+              <div className="text-center">
+                <span className="text-sm text-gray-500">Status:</span>
+                <Badge variant="outline" className="ml-2 bg-green-100 text-green-800 border-green-200">
+                  {currentUser && currentUser.status ? currentUser.status : 'Present'}
+                </Badge>
+              </div>
+              <Button 
+                onClick={() => setShowStatusModal(true)}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg transform hover:scale-105 transition-all"
+              >
+                ⚙️ Update Status
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Wings Section - Aligned to corner */}
+        <div className="flex justify-end mb-8">
+          <div className="w-full max-w-4xl">
+            <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Select Wing</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Link to="/wing/a-tech" className="group block transform hover:scale-105 transition-all duration-300">
+                <div 
+                  className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden border border-white/20"
+                  style={{
+                    backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                >
+                  <div className="bg-gradient-to-r from-blue-500/90 to-purple-600/90 backdrop-blur-sm p-6 text-white">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="text-2xl font-bold mb-2">A-Tech</h4>
+                        <p className="text-white/90">Technology & Development Teams</p>
+                      </div>
+                      <div className="text-3xl opacity-80 group-hover:opacity-100 transition-opacity group-hover:translate-x-2 transform transition-transform">
+                        →
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6 bg-white/90 backdrop-blur-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h5 className="text-lg font-semibold text-gray-800">📍 Wing Details</h5>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 font-semibold">
+                        {seatCounts.atech.available}/{seatCounts.atech.total} Available
+                      </Badge>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Total Seats</span>
+                        <span className="font-medium">{seatCounts.atech.total}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Available Now</span>
+                        <span className="font-medium text-green-600">{seatCounts.atech.available}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-500"
+                          style={{ width: `${(seatCounts.atech.available / seatCounts.atech.total) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+
+              <Link to="/wing/b-finance" className="group block transform hover:scale-105 transition-all duration-300">
+                <div 
+                  className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden border border-white/20"
+                  style={{
+                    backgroundImage: `linear-gradient(rgba(34, 197, 94, 0.1), rgba(59, 130, 246, 0.1)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                >
+                  <div className="bg-gradient-to-r from-green-500/90 to-blue-600/90 backdrop-blur-sm p-6 text-white">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="text-2xl font-bold mb-2">B-Finance</h4>
+                        <p className="text-white/90">Finance & Operations Teams</p>
+                      </div>
+                      <div className="text-3xl opacity-80 group-hover:opacity-100 transition-opacity group-hover:translate-x-2 transform transition-transform">
+                        →
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6 bg-white/90 backdrop-blur-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h5 className="text-lg font-semibold text-gray-800">📍 Wing Details</h5>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 font-semibold">
+                        {seatCounts.bfinance.available}/{seatCounts.bfinance.total} Available
+                      </Badge>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Total Seats</span>
+                        <span className="font-medium">{seatCounts.bfinance.total}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Available Now</span>
+                        <span className="font-medium text-green-600">{seatCounts.bfinance.available}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-500"
+                          style={{ width: `${(seatCounts.bfinance.available / seatCounts.bfinance.total) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
 
       <StatusUpdateModal 
@@ -237,7 +319,7 @@ const Dashboard = () => {
 
       {/* My Bookings Modal */}
       <Dialog open={bookingsOpen} onOpenChange={setBookingsOpen}>
-        <DialogContent className="max-w-md mx-4">
+        <DialogContent className="max-w-md mx-4 bg-white/90 backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl">My Bookings</DialogTitle>
           </DialogHeader>
@@ -250,7 +332,7 @@ const Dashboard = () => {
                   <li key={res.id} className="py-2 flex items-center justify-between">
                     <span>Seat {res.seat_number || res.seat_id} on {res.date}</span>
                     <button
-                      className="ml-4 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
+                      className="ml-4 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
                       onClick={() => handleCancelReservation(res.id)}
                     >
                       Cancel
