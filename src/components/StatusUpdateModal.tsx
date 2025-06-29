@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { isWeekend } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { supabase } from '../lib/supabaseClient';
 
 interface StatusUpdateModalProps {
   isOpen: boolean;
@@ -37,10 +38,42 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
     }
   };
 
-  const handleUpdateStatus = () => {
-    // Here you would typically update the user's status
-    console.log('Updating status to:', selectedStatus);
-    console.log('For dates:', selectedDates);
+  const handleUpdateStatus = async () => {
+    // Update the user's status in Supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ status: selectedStatus })
+        .eq('id', user.id);
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+      }
+      // If status is Leave or WFH, insert leave dates
+      if ((selectedStatus === 'Leave' || selectedStatus === 'Work From Home') && selectedDates.length > 0) {
+        // Fetch user's seat_number from profile
+        const { data: profile } = await supabase.from('profiles').select('seat_number').eq('id', user.id).single();
+        if (profile && profile.seat_number) {
+          // Fetch seat_id (BIGINT) from seats table using seat_number
+          const { data: seatRow } = await supabase.from('seats').select('id').eq('seat_number', profile.seat_number).single();
+          const seat_id = seatRow?.id;
+          if (seat_id) {
+            const leaveRows = selectedDates.map(date => ({
+              user_id: user.id,
+              seat_id: seat_id,
+              date: date.toISOString().slice(0, 10),
+              type: selectedStatus
+            }));
+            const { error: leaveError } = await supabase.from('user_leaves').insert(leaveRows);
+            if (leaveError) {
+              console.error('user_leaves insert error:', leaveError);
+            }
+          } else {
+            console.error('No seat_id found for seat_number', profile.seat_number);
+          }
+        }
+      }
+    }
     onClose();
   };
 
@@ -106,7 +139,7 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
                     mode="multiple"
                     selected={selectedDates}
                     onSelect={(dates) => setSelectedDates(dates || [])}
-                    disabled={(date) => date < today}
+                    disabled={date => date < today || isWeekend(date)}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
                   />

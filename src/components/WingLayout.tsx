@@ -1,14 +1,45 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Maximize2, X } from 'lucide-react';
 
 interface WingLayoutProps {
   wingId: string | undefined;
 }
 
 const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [showPreviewWarning, setShowPreviewWarning] = useState(false);
+
+  // Detect small screens or overflow
+  useEffect(() => {
+    function handleResize() {
+      setShowPreviewWarning(window.innerWidth < 1100);
+    }
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   if (wingId === 'a-tech') {
     return (
       <div className="space-y-6">
+        {/* Warning and Preview Button for small screens */}
+        {showPreviewWarning && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg flex items-center justify-between mb-2">
+            <div className="text-yellow-800 text-sm font-medium">
+              Due to your screen size, the layout may not display correctly. Click 'Preview' to see the correct image.
+            </div>
+            <Button
+              onClick={() => setIsPreviewOpen(true)}
+              variant="outline"
+              className="ml-4 flex items-center space-x-2 bg-white border-yellow-400 text-yellow-800 hover:bg-yellow-100"
+            >
+              <Maximize2 className="w-4 h-4" />
+              <span>Preview</span>
+            </Button>
+          </div>
+        )}
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
@@ -23,17 +54,16 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <style dangerouslySetInnerHTML={{
             __html: `
-              /* ===== BASE STYLES ===== */
               .wing-layout * {
                 box-sizing: border-box;
               }
 
               .wing-layout {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                line-height: 1.4;
-                background-color: #f5f5f5;
+                margin: 0;
                 padding: 20px;
-                border-radius: 8px;
+                background-color: #f5f5f5;
+                line-height: 1.4;
               }
 
               .wing-layout .page-title {
@@ -44,7 +74,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
                 font-weight: 600;
               }
 
-              /* ===== MAIN CONTAINER ===== */
               .wing-layout .office-container {
                 background: white;
                 border: 3px solid #333;
@@ -56,7 +85,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
                 position: relative;
               }
 
-              /* ===== GRID LAYOUT ===== */
               .wing-layout .office-layout {
                 display: grid;
                 grid-template-columns: 200px 1fr 150px;
@@ -67,7 +95,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
                 position: relative;
               }
 
-              /* Walking bay between top cabins and main floor */
               .wing-layout .walking-bay {
                 grid-column: 1 / -1;
                 background: linear-gradient(90deg, #f0f0f0, #e8e8e8, #f0f0f0);
@@ -81,7 +108,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
                 font-style: italic;
               }
 
-              /* ===== TOP SECTION (Cabins & Meeting Room) ===== */
               .wing-layout .top-section {
                 grid-column: 1 / -1;
                 display: flex;
@@ -116,7 +142,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
                 flex: 2;
               }
 
-              /* Door indicators */
               .wing-layout .personal-cabin::after,
               .wing-layout .meeting-room::after {
                 content: '🚪';
@@ -127,7 +152,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
                 font-size: 14px;
               }
 
-              /* ===== LEFT SECTION ===== */
               .wing-layout .left-section {
                 display: flex;
                 flex-direction: column;
@@ -204,7 +228,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
                 box-shadow: -4px 0 8px rgba(33, 150, 243, 0.2);
               }
 
-              /* ===== CENTER SECTION (Work Area) ===== */
               .wing-layout .center-section {
                 display: grid;
                 grid-template-rows: 1fr auto 1fr;
@@ -264,7 +287,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
                 position: relative;
               }
 
-              /* Middle work desks */
               .wing-layout .middle-work-area {
                 display: flex;
                 flex-direction: column;
@@ -292,7 +314,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
                 box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
               }
 
-              /* ===== RIGHT SECTION ===== */
               .wing-layout .right-section {
                 display: flex;
                 flex-direction: column;
@@ -340,7 +361,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
                 box-shadow: 4px 0 8px rgba(255, 152, 0, 0.2);
               }
 
-              /* ===== LEGEND ===== */
               .wing-layout .legend {
                 margin-top: 25px;
                 display: grid;
@@ -372,7 +392,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
                 color: #333;
               }
 
-              /* ===== RESPONSIVE DESIGN ===== */
               @media (max-width: 768px) {
                 .wing-layout .office-layout {
                   grid-template-columns: 1fr;
@@ -397,7 +416,6 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
               }
             `
           }} />
-          
           <div className="wing-layout">
             <h1 className="page-title">Cprime Floor Plan A-Wing</h1>
             
@@ -595,6 +613,32 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
             </div>
           </div>
         </div>
+
+        {/* Preview Modal */}
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 flex flex-col items-center justify-center">
+            <DialogHeader className="p-6 pb-0">
+              <DialogTitle className="flex items-center justify-between w-full">
+                <span>A-Tech Wing Layout - Full Size Preview</span>
+                <Button 
+                  onClick={() => setIsPreviewOpen(false)}
+                  variant="outline"
+                  size="sm"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 w-full flex items-center justify-center p-4">
+              <img
+                src="/wing-a-tech-preview.png"
+                alt="A-Tech Wing Layout Preview"
+                className="max-w-full max-h-[70vh] rounded-lg border shadow-lg object-contain"
+                style={{ background: '#fff' }}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }

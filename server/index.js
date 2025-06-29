@@ -1,9 +1,26 @@
-export const employees = [
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  },
+});
+
+app.use(cors());
+app.use(express.json());
+
+// In-memory data
+let employees = [
   // Unassigned seats
   { id: 'A01', seatNumber: 'A01', name: 'Unassigned', cluster: 'Available', status: 'Available', type: 'onsite', wing: 'A-Tech' },
   { id: 'A02', seatNumber: 'A02', name: 'Unassigned', cluster: 'Available', status: 'Available', type: 'onsite', wing: 'A-Tech' },
   { id: 'A49', seatNumber: 'A49', name: 'Unassigned', cluster: 'Available', status: 'Available', type: 'onsite', wing: 'A-Tech' },
-  
   // Assigned employees
   { id: 'A03', seatNumber: 'A03', name: 'Farhan Akthar', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A04', seatNumber: 'A04', name: 'Suba Shree K B', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
@@ -67,3 +84,56 @@ export const employees = [
   { id: 'A63', seatNumber: 'A63', name: 'Thirisha Babu', cluster: 'AI Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A64', seatNumber: 'A64', name: 'Joshna Acsha', cluster: 'AI Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' }
 ];
+let seats = [
+  { id: 1, number: 'A1', occupied: false },
+  { id: 2, number: 'A2', occupied: true },
+];
+
+// REST endpoints
+app.get('/api/employees', (req, res) => {
+  res.json(employees);
+});
+
+app.get('/api/seats', (req, res) => {
+  res.json(seats);
+});
+
+app.put('/api/seats/:id', (req, res) => {
+  const seatId = parseInt(req.params.id);
+  const { occupied } = req.body;
+  const seat = seats.find((s) => s.id === seatId);
+  if (seat) {
+    seat.occupied = occupied;
+    io.emit('seatUpdate', seat); // Real-time update
+    res.json(seat);
+  } else {
+    res.status(404).json({ error: 'Seat not found' });
+  }
+});
+
+// Legacy login route for demo/legacy support
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  // For demo: accept password 'password123' for any user with matching email
+  const user = employees.find(
+    (emp) => emp.email === username && password === 'password123'
+  );
+  if (user) {
+    res.json({ success: true, user });
+  } else {
+    res.status(403).json({ success: false, message: 'Invalid credentials' });
+  }
+});
+
+// Socket.IO events
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+const PORT = 4000;
+server.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+}); 
