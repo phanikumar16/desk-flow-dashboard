@@ -40,7 +40,12 @@ const WingDetails = () => {
           seat.seat_number.startsWith(wingId === 'a-tech' ? 'A' : 'B')
         );
         
-        setTotalSeatsCount(wingSeats.length);
+        // Set total seats to 64 for A-Tech wing
+        if (wingId === 'a-tech') {
+          setTotalSeatsCount(64);
+        } else {
+          setTotalSeatsCount(wingSeats.length);
+        }
 
         // Calculate available seats
         const { data: reservations } = await supabase
@@ -58,30 +63,60 @@ const WingDetails = () => {
 
         let availableCount = 0;
 
-        wingSeats.forEach(seat => {
-          const isUnassigned = UNASSIGNED_SEATS.includes(seat.seat_number);
-          
-          if (isUnassigned) {
-            // Check if seat is not reserved today
+        // For A-Tech wing, calculate available seats properly
+        if (wingId === 'a-tech') {
+          // Count unassigned seats that are not reserved today
+          const unassignedAvailable = UNASSIGNED_SEATS.filter(seatNumber => {
+            const seat = wingSeats.find(s => s.seat_number === seatNumber);
+            if (!seat) return false;
+            
             const reservedToday = reservations?.some(r => 
               r.seat_id === seat.id && r.date === todayStr
             );
-            if (!reservedToday && !isWeekend(today)) {
-              availableCount++;
-            }
-          } else {
-            // Check if assigned employee is on leave today
+            return !reservedToday;
+          }).length;
+
+          // Count assigned seats where employee is on leave today
+          const assignedAvailable = wingSeats.filter(seat => {
+            if (UNASSIGNED_SEATS.includes(seat.seat_number)) return false;
+            
             const onLeaveToday = userLeaves?.some(l => 
               l.seat_id == seat.id && l.date === todayStr
             );
             const reservedToday = reservations?.some(r => 
               r.seat_id === seat.id && r.date === todayStr
             );
-            if (onLeaveToday && !reservedToday && !isWeekend(today)) {
-              availableCount++;
+            return onLeaveToday && !reservedToday;
+          }).length;
+
+          availableCount = unassignedAvailable + assignedAvailable;
+        } else {
+          // For other wings, use the existing logic
+          wingSeats.forEach(seat => {
+            const isUnassigned = UNASSIGNED_SEATS.includes(seat.seat_number);
+            
+            if (isUnassigned) {
+              // Check if seat is not reserved today
+              const reservedToday = reservations?.some(r => 
+                r.seat_id === seat.id && r.date === todayStr
+              );
+              if (!reservedToday) {
+                availableCount++;
+              }
+            } else {
+              // Check if assigned employee is on leave today
+              const onLeaveToday = userLeaves?.some(l => 
+                l.seat_id == seat.id && l.date === todayStr
+              );
+              const reservedToday = reservations?.some(r => 
+                r.seat_id === seat.id && r.date === todayStr
+              );
+              if (onLeaveToday && !reservedToday) {
+                availableCount++;
+              }
             }
-          }
-        });
+          });
+        }
 
         setAvailableSeatsCount(availableCount);
       }

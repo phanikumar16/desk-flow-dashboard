@@ -153,7 +153,6 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
 
   const today = new Date();
   const currentDateString = format(today, 'EEEE, dd/MM/yyyy');
-  const isHoliday = isWeekend(today);
 
   console.log('EMPLOYEES:', availableSeats);
 
@@ -208,7 +207,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
     const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
     const availableDays = days.filter(d => {
       const dateStr = format(d, 'yyyy-MM-dd');
-      return !isWeekend(d) && d >= new Date() && !reservedDates.includes(dateStr);
+      return d >= new Date() && !reservedDates.includes(dateStr);
     });
     return availableDays.length > 0;
   });
@@ -229,31 +228,6 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
   ];
 
   console.log('displayedSeats:', displayedSeats);
-
-  if (isHoliday) {
-    return (
-      <div 
-        className="space-y-4 sm:space-y-6 min-h-96"
-        style={{
-          backgroundImage: `linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.05)), url('https://images.unsplash.com/photo-1501594907352-04cda38ebc29?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          borderRadius: '12px'
-        }}
-      >
-        <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-8 text-center border border-white/20">
-          <div className="text-6xl mb-4">🏖️</div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Holiday!</h2>
-          <p className="text-lg text-gray-600 mb-2">
-            It's {format(today, 'EEEE')} - enjoy your weekend!
-          </p>
-          <p className="text-gray-500">
-            Seat reservations are available on weekdays only.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div 
@@ -349,7 +323,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Select dates for reservation (weekdays only):
+                Select dates for reservation:
               </label>
               {modalSeat && (() => {
                 const isUnassigned = UNASSIGNED_SEATS.includes(modalSeat.seat_number);
@@ -368,16 +342,16 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                 let availableDates: string[] = [];
                 if (isUnassigned) {
                   availableDates = days
-                    .filter(d => !isWeekend(d) && d >= today && !reservedDates.includes(format(d, 'yyyy-MM-dd')))
+                    .filter(d => d >= today && !reservedDates.includes(format(d, 'yyyy-MM-dd')))
                     .map(d => format(d, 'yyyy-MM-dd'));
                 } else {
                   const todayStr = format(today, 'yyyy-MM-dd');
                   const leaveDates = userLeaves.filter(l => l.seat_id == modalSeat.id).map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
-                  const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(new Date(d)));
+                  const futureLeaveDates = leaveDates.filter(d => d >= todayStr);
                   availableDates = futureLeaveDates.filter(d => !reservedDates.includes(d));
                 }
                 if (availableDates.length === 0) {
-                  return <div className="text-gray-500">No available weekdays for this seat.</div>;
+                  return <div className="text-gray-500">No available dates for this seat.</div>;
                 }
                 return (
                   <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
@@ -417,12 +391,6 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                   let errorMsg = '';
                   for (const date of modalDates) {
                     const dateStr = format(date, 'yyyy-MM-dd');
-                    // Check if it's a weekend
-                    if (isWeekend(date)) {
-                      success = false;
-                      errorMsg = 'Weekend bookings are not allowed.';
-                      break;
-                    }
                     const alreadyReserved = reservations.some(
                       r => String(r.seat_id) === String(modalSeat.id) && r.date === dateStr
                     );
