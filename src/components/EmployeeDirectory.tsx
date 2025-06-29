@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -139,7 +138,7 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
         className="relative rounded-3xl border border-white/20 p-4 transition-all duration-300 flex items-stretch pl-3 overflow-hidden group shadow-xl backdrop-blur-md hover:shadow-2xl transform hover:scale-105 cursor-pointer"
         style={{
           borderLeft: `6px solid ${empColor}`,
-          background: `linear-gradient(135deg, ${empColor}10, rgba(255,255,255,0.9))`,
+          background: `${empColor}10`,
         }}
         onClick={() => {
           if (UNASSIGNED_SEATS.includes(employee.seatNumber)) {
@@ -154,7 +153,7 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
         <div
           className="absolute inset-0 pointer-events-none z-0 opacity-20"
           style={{
-            background: `radial-gradient(circle at 20% 20%, ${empColor}30 0%, transparent 70%)`,
+            background: 'none',
           }}
         />
         <div className="flex items-center space-x-4 flex-1 relative z-20">
@@ -310,14 +309,7 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
 
   return (
     <div 
-      className="space-y-4 sm:space-y-6"
-      style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.02), rgba(0,0,0,0.02)), url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        borderRadius: '12px',
-        padding: '20px'
-      }}
+      className="space-y-4 sm:space-y-6 bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 p-4 rounded-3xl"
     >
       {/* Header */}
       <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-4 sm:p-6 border border-white/20">

@@ -234,14 +234,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
 
   return (
     <div 
-      className="space-y-4 sm:space-y-6"
-      style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.02), rgba(0,0,0,0.02)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        borderRadius: '12px',
-        padding: '20px'
-      }}
+      className="space-y-4 sm:space-y-6 bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 p-4 rounded-3xl"
     >
       {/* Header */}
       <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-4 sm:p-6 border border-white/20">

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -103,13 +102,7 @@ const Dashboard = () => {
 
   return (
     <div 
-      className="min-h-screen"
-      style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.05)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
-      }}
+      className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100"
     >
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20">
@@ -153,7 +146,7 @@ const Dashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* User Greeting Card */}
+        {/* User Greeting Card and Status */}
         <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-6 lg:p-8 mb-8 border border-white/20">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
             <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
@@ -203,105 +196,93 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Wings Section - Aligned to corner */}
-        <div className="flex justify-end mb-8">
-          <div className="w-full max-w-4xl">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Select Wing</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Link to="/wing/a-tech" className="group block transform hover:scale-105 transition-all duration-300">
-                <div 
-                  className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden border border-white/20"
-                  style={{
-                    backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80')`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                >
-                  <div className="bg-gradient-to-r from-blue-500/90 to-purple-600/90 backdrop-blur-sm p-6 text-white">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h4 className="text-2xl font-bold mb-2">A-Tech</h4>
-                        <p className="text-white/90">Technology & Development Teams</p>
-                      </div>
-                      <div className="text-3xl opacity-80 group-hover:opacity-100 transition-opacity group-hover:translate-x-2 transform transition-transform">
-                        →
-                      </div>
+        {/* Wings Section - Centered and Large */}
+        <div className="flex flex-col items-center mb-8">
+          <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Select Wing</h3>
+          <div className="w-full flex flex-col lg:flex-row justify-center items-center gap-8">
+            <Link to="/wing/a-tech" className="group block w-full max-w-md transform hover:scale-105 transition-all duration-300">
+              <div 
+                className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden border border-white/20 min-h-[270px] lg:min-h-[340px] flex flex-col justify-between"
+              >
+                <div className="bg-gradient-to-r from-blue-500/90 to-purple-600/90 backdrop-blur-sm p-8 text-white">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="text-3xl font-bold mb-2">A-Tech</h4>
+                      <p className="text-white/90 text-lg">Technology & Development Teams</p>
                     </div>
-                  </div>
-                  <div className="p-6 bg-white/90 backdrop-blur-sm">
-                    <div className="flex items-center justify-between mb-4">
-                      <h5 className="text-lg font-semibold text-gray-800">📍 Wing Details</h5>
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 font-semibold">
-                        {seatCounts.atech.available}/{seatCounts.atech.total} Available
-                      </Badge>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Total Seats</span>
-                        <span className="font-medium">{seatCounts.atech.total}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Available Now</span>
-                        <span className="font-medium text-green-600">{seatCounts.atech.available}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-500"
-                          style={{ width: `${(seatCounts.atech.available / seatCounts.atech.total) * 100}%` }}
-                        ></div>
-                      </div>
+                    <div className="text-4xl opacity-80 group-hover:opacity-100 transition-opacity group-hover:translate-x-2 transform transition-transform">
+                      →
                     </div>
                   </div>
                 </div>
-              </Link>
+                <div className="p-8 bg-white/90 backdrop-blur-sm flex-1 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-4">
+                    <h5 className="text-xl font-semibold text-gray-800">📍 Wing Details</h5>
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 font-semibold text-lg">
+                      {seatCounts.atech.available}/{seatCounts.atech.total} Available
+                    </Badge>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-base">
+                      <span className="text-gray-600">Total Seats</span>
+                      <span className="font-medium">{seatCounts.atech.total}</span>
+                    </div>
+                    <div className="flex justify-between text-base">
+                      <span className="text-gray-600">Available Now</span>
+                      <span className="font-medium text-green-600">{seatCounts.atech.available}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-4">
+                      <div 
+                        className="bg-gradient-to-r from-green-400 to-green-600 h-4 rounded-full transition-all duration-500"
+                        style={{ width: `${(seatCounts.atech.available / seatCounts.atech.total) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Link>
 
-              <Link to="/wing/b-finance" className="group block transform hover:scale-105 transition-all duration-300">
-                <div 
-                  className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden border border-white/20"
-                  style={{
-                    backgroundImage: `linear-gradient(rgba(34, 197, 94, 0.1), rgba(59, 130, 246, 0.1)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80')`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                >
-                  <div className="bg-gradient-to-r from-green-500/90 to-blue-600/90 backdrop-blur-sm p-6 text-white">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h4 className="text-2xl font-bold mb-2">B-Finance</h4>
-                        <p className="text-white/90">Finance & Operations Teams</p>
-                      </div>
-                      <div className="text-3xl opacity-80 group-hover:opacity-100 transition-opacity group-hover:translate-x-2 transform transition-transform">
-                        →
-                      </div>
+            <Link to="/wing/b-finance" className="group block w-full max-w-md transform hover:scale-105 transition-all duration-300">
+              <div 
+                className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden border border-white/20 min-h-[270px] lg:min-h-[340px] flex flex-col justify-between"
+              >
+                <div className="bg-gradient-to-r from-green-500/90 to-blue-600/90 backdrop-blur-sm p-8 text-white">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="text-3xl font-bold mb-2">B-Finance</h4>
+                      <p className="text-white/90 text-lg">Finance & Operations Teams</p>
                     </div>
-                  </div>
-                  <div className="p-6 bg-white/90 backdrop-blur-sm">
-                    <div className="flex items-center justify-between mb-4">
-                      <h5 className="text-lg font-semibold text-gray-800">📍 Wing Details</h5>
-                      <Badge variant="outline" className="bg-green-50 text-green-700 font-semibold">
-                        {seatCounts.bfinance.available}/{seatCounts.bfinance.total} Available
-                      </Badge>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Total Seats</span>
-                        <span className="font-medium">{seatCounts.bfinance.total}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Available Now</span>
-                        <span className="font-medium text-green-600">{seatCounts.bfinance.available}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-500"
-                          style={{ width: `${(seatCounts.bfinance.available / seatCounts.bfinance.total) * 100}%` }}
-                        ></div>
-                      </div>
+                    <div className="text-4xl opacity-80 group-hover:opacity-100 transition-opacity group-hover:translate-x-2 transform transition-transform">
+                      →
                     </div>
                   </div>
                 </div>
-              </Link>
-            </div>
+                <div className="p-8 bg-white/90 backdrop-blur-sm flex-1 flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-4">
+                    <h5 className="text-xl font-semibold text-gray-800">📍 Wing Details</h5>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 font-semibold text-lg">
+                      {seatCounts.bfinance.available}/{seatCounts.bfinance.total} Available
+                    </Badge>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-base">
+                      <span className="text-gray-600">Total Seats</span>
+                      <span className="font-medium">{seatCounts.bfinance.total}</span>
+                    </div>
+                    <div className="flex justify-between text-base">
+                      <span className="text-gray-600">Available Now</span>
+                      <span className="font-medium text-green-600">{seatCounts.bfinance.available}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-4">
+                      <div 
+                        className="bg-gradient-to-r from-green-400 to-green-600 h-4 rounded-full transition-all duration-500"
+                        style={{ width: `${(seatCounts.bfinance.available / seatCounts.bfinance.total) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
       </div>

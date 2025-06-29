@@ -130,13 +130,7 @@ const WingDetails = () => {
 
   return (
     <div 
-      className="min-h-screen"
-      style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.05)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
-      }}
+      className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100"
     >
       {/* Header */}
       <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20">
