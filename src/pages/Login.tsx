@@ -25,7 +25,7 @@ const Login: React.FC = () => {
       className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-blue-200"
     >
       <form onSubmit={handleLogin} className="max-w-sm mx-auto p-8 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20">
-        <h2 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Welcome Back</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Welcome</h2>
         <input
           className="w-full mb-4 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           type="email"
