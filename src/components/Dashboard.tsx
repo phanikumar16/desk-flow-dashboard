@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import { supabase } from '../lib/supabaseClient';
 const Dashboard = () => {
   const navigate = useNavigate();
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showLeavesModal, setShowLeavesModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [bookingsOpen, setBookingsOpen] = useState(false);
   const [userReservations, setUserReservations] = useState<any[]>([]);
@@ -185,6 +185,9 @@ const Dashboard = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setBookingsOpen(true)}>
                     My Bookings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowLeavesModal(true)}>
+                    My Leaves/WFH
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600">
@@ -359,6 +362,29 @@ const Dashboard = () => {
         }}
         onStatusUpdated={handleStatusUpdated}
       />
+
+      {/* My Leaves/WFH Modal */}
+      <Dialog open={showLeavesModal} onOpenChange={setShowLeavesModal}>
+        <DialogContent className="max-w-md mx-4 bg-white/90 backdrop-blur-sm">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">My Leaves/WFH</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-gray-600 mb-4">Update your leave or work-from-home status</p>
+              <Button 
+                onClick={() => {
+                  setShowLeavesModal(false);
+                  setShowStatusModal(true);
+                }}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              >
+                Update Status
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* My Bookings Modal */}
       <Dialog open={bookingsOpen} onOpenChange={setBookingsOpen}>
