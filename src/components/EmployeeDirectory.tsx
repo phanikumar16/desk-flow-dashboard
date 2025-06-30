@@ -25,6 +25,7 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
   const [modalSeat, setModalSeat] = useState<string | null>(null);
   const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [todayStatuses, setTodayStatuses] = useState<{[key: string]: string}>({});
 
   const wingEmployees = employees.filter(emp => emp.wing === 'A-Tech');
   const onsiteEmployees = wingEmployees.filter(emp => emp.type === 'onsite');
@@ -90,6 +91,33 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
     fetchUserLeaves();
   }, []);
 
+  // Fetch today's statuses for all employees
+  useEffect(() => {
+    const fetchTodayStatuses = async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: seats } = await supabase.from('seats').select('*');
+      const { data: leaves } = await supabase.from('user_leaves').select('*').eq('date', today);
+      
+      if (seats && leaves) {
+        const statusMap: {[key: string]: string} = {};
+        
+        // Map seat numbers to today's status
+        seats.forEach(seat => {
+          const todayLeave = leaves.find(l => l.seat_id == seat.id);
+          if (todayLeave) {
+            statusMap[seat.seat_number] = todayLeave.type;
+          } else {
+            statusMap[seat.seat_number] = 'Present';
+          }
+        });
+        
+        setTodayStatuses(statusMap);
+      }
+    };
+    
+    fetchTodayStatuses();
+  }, [userLeaves]);
+
   const getNextAvailableDate = (employee: any) => {
     if (employee.status === 'Present') return null;
     
@@ -115,6 +143,9 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
     const empColor = stringToColor(employee.name + employee.seatNumber);
     const gradientBg = `linear-gradient(135deg, ${empColor}15 0%, #fff 100%)`;
     const nextAvailable = getNextAvailableDate(employee);
+    
+    // Get today's status for this employee
+    const todayStatus = todayStatuses[employee.seatNumber] || employee.status;
     
     // Show reservation info for unassigned seats
     let reservationInfo = null;
@@ -145,7 +176,7 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
             setModalSeat(employee.seatNumber);
             setUnassignedModalOpen(true);
           } else {
-            setSelectedEmployee(employee);
+            setSelectedEmployee({...employee, status: todayStatus});
             setEmployeeModalOpen(true);
           }
         }}
@@ -165,9 +196,9 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
               </AvatarFallback>
             </Avatar>
             <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-lg ${
-              employee.status === 'Present' ? 'bg-green-500' : 
-              employee.status === 'Leave' ? 'bg-red-500' : 
-              employee.status === 'Work From Home' ? 'bg-yellow-500' : 'bg-gray-400'
+              todayStatus === 'Present' ? 'bg-green-500' : 
+              todayStatus === 'Leave' ? 'bg-red-500' : 
+              todayStatus === 'Work From Home' ? 'bg-yellow-500' : 'bg-gray-400'
             }`}></div>
           </div>
           
@@ -198,9 +229,9 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
                 <span className="font-medium truncate ml-2">{employee.cluster}</span>
               </div>
               <div className="flex justify-between text-sm items-center">
-                <span className="text-gray-500">Status</span>
-                <Badge variant="outline" className={`text-xs ${getStatusBadge(employee.status)}`}> 
-                  {employee.status === 'Available' ? 'Available for booking' : employee.status}
+                <span className="text-gray-500">Today's Status</span>
+                <Badge variant="outline" className={`text-xs ${getStatusBadge(todayStatus)}`}> 
+                  {todayStatus === 'Available' ? 'Available for booking' : todayStatus}
                 </Badge>
               </div>
               {nextAvailable && (

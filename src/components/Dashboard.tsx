@@ -17,6 +17,7 @@ const Dashboard = () => {
   const [bookingsOpen, setBookingsOpen] = useState(false);
   const [userReservations, setUserReservations] = useState<any[]>([]);
   const [seatCounts, setSeatCounts] = useState({ atech: { total: 64, available: 0 }, bfinance: { total: 48, available: 0 } });
+  const [todayStatus, setTodayStatus] = useState<string>('Present');
   const { toast } = useToast();
 
   const fetchProfile = async () => {
@@ -30,7 +31,40 @@ const Dashboard = () => {
       .select('*')
       .eq('id', user.id)
       .single();
-    if (data) setCurrentUser(data);
+    if (data) {
+      setCurrentUser(data);
+      // Check today's status from user_leaves table
+      await checkTodayStatus(data);
+    }
+  };
+
+  const checkTodayStatus = async (userProfile: any) => {
+    if (!userProfile?.seat_number) return;
+    
+    const today = new Date().toISOString().slice(0, 10);
+    
+    // Get seat_id from seats table using seat_number
+    const { data: seatRow } = await supabase
+      .from('seats')
+      .select('id')
+      .eq('seat_number', userProfile.seat_number)
+      .single();
+    
+    if (seatRow?.id) {
+      // Check if user has leave entry for today
+      const { data: leaveData } = await supabase
+        .from('user_leaves')
+        .select('type')
+        .eq('seat_id', seatRow.id)
+        .eq('date', today)
+        .single();
+      
+      if (leaveData) {
+        setTodayStatus(leaveData.type);
+      } else {
+        setTodayStatus('Present');
+      }
+    }
   };
 
   useEffect(() => {
@@ -175,7 +209,11 @@ const Dashboard = () => {
                     {currentUser && currentUser.full_name ? currentUser.full_name[0] : '?'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
+                <div className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 ${
+                  todayStatus === 'Present' ? 'bg-green-500' : 
+                  todayStatus === 'Leave' ? 'bg-red-500' : 
+                  todayStatus === 'Work From Home' ? 'bg-yellow-500' : 'bg-green-500'
+                } rounded-full border-2 border-white shadow-lg`}></div>
               </div>
               <div>
                 <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
@@ -199,9 +237,14 @@ const Dashboard = () => {
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
               <div className="text-center">
-                <span className="text-sm text-gray-500">Status:</span>
-                <Badge variant="outline" className="ml-2 bg-green-100 text-green-800 border-green-200">
-                  {currentUser && currentUser.status ? currentUser.status : 'Present'}
+                <span className="text-sm text-gray-500">Today's Status:</span>
+                <Badge variant="outline" className={`ml-2 ${
+                  todayStatus === 'Present' ? 'bg-green-100 text-green-800 border-green-200' :
+                  todayStatus === 'Leave' ? 'bg-red-100 text-red-800 border-red-200' :
+                  todayStatus === 'Work From Home' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                  'bg-green-100 text-green-800 border-green-200'
+                }`}>
+                  {todayStatus}
                 </Badge>
               </div>
               <Button 
@@ -312,7 +355,7 @@ const Dashboard = () => {
           name: currentUser ? currentUser.full_name : 'Guest',
           seatNumber: currentUser ? currentUser.seat_number : '-',
           cluster: currentUser ? currentUser.cluster : '-',
-          status: currentUser && currentUser.status ? currentUser.status : 'Present',
+          status: todayStatus,
         }}
         onStatusUpdated={handleStatusUpdated}
       />
