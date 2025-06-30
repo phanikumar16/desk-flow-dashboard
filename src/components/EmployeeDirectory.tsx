@@ -16,6 +16,14 @@ interface EmployeeDirectoryProps {
 const UNASSIGNED_SEATS = ['A01', 'A02', 'A49'];
 
 const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
+  if (wingId === 'b-finance') {
+    return (
+      <div className="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded text-center">
+        B wing employee details need to be added soon. No employees to display.
+      </div>
+    );
+  }
+
   const [searchTerm, setSearchTerm] = useState('');
   const [clusterFilter, setClusterFilter] = useState('all');
   const [reservations, setReservations] = useState<any[]>([]);
@@ -27,7 +35,7 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [todayStatuses, setTodayStatuses] = useState<{[key: string]: string}>({});
 
-  const wingEmployees = employees.filter(emp => emp.wing === 'A-Tech');
+  const wingEmployees = employees.filter(emp => emp.wing !== 'B-finance');
   const onsiteEmployees = wingEmployees.filter(emp => emp.type === 'onsite');
 
   const filterEmployees = (employeeList: typeof employees) => {
@@ -55,9 +63,10 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
-  const generateEmail = (name: string) => {
-    if (name === 'Unassigned') return '';
-    return name.toLowerCase().replace(/\s+/g, '.') + '@cprime.com';
+  const generateEmail = (employee: typeof employees[0]) => {
+    if (employee.email) return employee.email;
+    if (employee.name === 'Unassigned') return '';
+    return employee.name.toLowerCase().replace(/\s+/g, '.') + '@cprime.com';
   };
 
   function stringToColor(str: string) {
@@ -208,7 +217,7 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
                 <h3 className="font-bold text-gray-900 truncate text-lg">{employee.name}</h3>
                 {employee.name !== 'Unassigned' && (
                   <p className="text-xs text-gray-500 truncate bg-gray-100 px-2 py-1 rounded-full mt-1">
-                    {generateEmail(employee.name)}
+                    {generateEmail(employee)}
                   </p>
                 )}
               </div>
@@ -303,7 +312,7 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
               </Avatar>
               <div>
                 <h3 className="font-bold text-lg">{selectedEmployee.name}</h3>
-                <p className="text-sm text-gray-600">{generateEmail(selectedEmployee.name)}</p>
+                <p className="text-sm text-gray-600">{generateEmail(selectedEmployee)}</p>
                 <Badge className={getStatusBadge(selectedEmployee.status)}>
                   {selectedEmployee.status}
                 </Badge>

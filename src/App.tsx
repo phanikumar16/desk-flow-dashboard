@@ -9,6 +9,7 @@ import WingDetails from "./components/WingDetails";
 import NotFound from "./pages/NotFound";
 import ChangePassword from './pages/ChangePassword';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () =>
           <Route path="/wing/:wingId" element={<WingDetails />} />
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/login" element={<Login />} />
+          {/* <Route path="/signup" element={<Signup />} /> */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>

@@ -65,7 +65,10 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
 
     const fetchUserLeaves = async () => {
       const { data, error } = await supabase.from('user_leaves').select('*');
-      if (!error && data) setUserLeaves(data);
+      if (!error && data) {
+        setUserLeaves(data);
+        console.log('DEBUG: userLeaves fetched', data);
+      }
     };
     fetchUserLeaves();
 
@@ -87,6 +90,12 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
       .subscribe();
 
     fetchReservations();
+
+    // Add debug log after all fetches
+    setTimeout(() => {
+      console.log('DEBUG: availableSeats', availableSeats);
+      console.log('DEBUG: userLeaves', userLeaves);
+    }, 2000);
 
     return () => {
       supabase.removeChannel(subscription);
@@ -219,7 +228,10 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const assignedAvailableSeats = availableSeats.filter(seat => {
     if (UNASSIGNED_SEATS.includes(seat.seat_number)) return false;
-    const leaveDates = userLeaves.filter(l => l.seat_id == seat.id).map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
+    // Only consider leave/WFH types
+    const seatLeaves = userLeaves.filter(l => l.seat_id == seat.id && (l.type === 'Leave' || l.type === 'Work From Home'));
+    const leaveDates = seatLeaves.map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
+    console.log('Checking seat:', seat.seat_number, 'seat.id:', seat.id, 'seatLeaves:', seatLeaves, 'leaveDates:', leaveDates);
     const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(new Date(d)));
     const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
     // Filter out weekends from leave dates
@@ -228,10 +240,13 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
     return availableDates.length > 0;
   });
 
-  const displayedSeats = [
-    ...alwaysAvailableSeats,
-    ...assignedAvailableSeats
-  ];
+  let displayedSeats = [];
+  if (wingId === 'A-Tech') {
+    displayedSeats = [
+      ...alwaysAvailableSeats,
+      ...assignedAvailableSeats
+    ];
+  }
 
   console.log('displayedSeats:', displayedSeats);
 
@@ -284,7 +299,10 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
           let availableDates: string[] = [];
           if (!isUnassigned) {
             const todayStr = format(new Date(), 'yyyy-MM-dd');
-            const leaveDates = userLeaves.filter(l => l.seat_id == seat.id).map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
+            // Only consider leave/WFH types
+            const leaveDates = userLeaves
+              .filter(l => l.seat_id == seat.id && (l.type === 'Leave' || l.type === 'Work From Home'))
+              .map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
             const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(new Date(d)));
             const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
             availableDates = futureLeaveDates.filter(d => !reservedDates.includes(d));
@@ -357,7 +375,10 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                     .map(d => format(d, 'yyyy-MM-dd'));
                 } else {
                   const todayStr = format(today, 'yyyy-MM-dd');
-                  const leaveDates = userLeaves.filter(l => l.seat_id == modalSeat.id).map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
+                  // Only consider leave/WFH types
+                  const leaveDates = userLeaves
+                    .filter(l => l.seat_id == modalSeat.id && (l.type === 'Leave' || l.type === 'Work From Home'))
+                    .map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
                   const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(new Date(d)));
                   availableDates = futureLeaveDates.filter(d => !reservedDates.includes(d));
                 }

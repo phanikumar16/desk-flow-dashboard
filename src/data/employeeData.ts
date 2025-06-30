@@ -8,7 +8,7 @@ export const employees = [
   { id: 'A03', seatNumber: 'A03', name: 'Farhan Akthar', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A04', seatNumber: 'A04', name: 'Suba Shree K B', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A05', seatNumber: 'A05', name: 'Harini R', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
-  { id: 'A06', seatNumber: 'A06', name: 'Phani Kumar', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
+  { id: 'A06', seatNumber: 'A06', name: 'Phani Kumar', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech', email: 'chinthamekala.phanikumar@cprime.com' },
   { id: 'A07', seatNumber: 'A07', name: 'Matcha Bhavana', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A08', seatNumber: 'A08', name: 'Viswa AK', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A09', seatNumber: 'A09', name: 'Yogesh Srivastava', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },

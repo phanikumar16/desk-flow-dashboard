@@ -1,5 +1,5 @@
-
 import React from 'react';
+import './BwingLayout.css';
 
 interface WingLayoutProps {
   wingId: string | undefined;
@@ -572,7 +572,121 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
     );
   }
 
-  // B-Finance Wing Layout - Restored to original simple design
+  // B-Wing Layout (updated to match provided HTML/CSS)
+  if (wingId === 'b-finance' || wingId === 'b-wing') {
+    return (
+      <div className="office-container">
+        <h1 style={{ textAlign: 'center', color: '#333', marginBottom: '30px' }}>B-WING OFFICE LAYOUT</h1>
+        <div className="office-layout">
+          {/* Top Section */}
+          <div className="top-section">
+            <div className="meeting-room">LOTUS</div>
+            <div className="meeting-room">PEONY</div>
+            <div className="meeting-room">IRIS</div>
+            <div className="meeting-room server">SERVER</div>
+          </div>
+          {/* Walking Area */}
+          <div className="walking-area walking-horizontal">Walking Area</div>
+          {/* Main Work Area */}
+          <div className="main-work-area">
+            {/* Left Section */}
+            <div className="left-section">
+              <div className="left-top-row">
+                <div className="desk-block desk-block-2v-small">
+                  <div className="desk">1</div>
+                  <div className="desk">2</div>
+                </div>
+                <div className="desk-block desk-block-4">
+                  <div className="desk">3</div>
+                  <div className="desk">4</div>
+                  <div className="desk">5</div>
+                  <div className="desk">6</div>
+                </div>
+              </div>
+              <div className="desk-block desk-block-4" style={{ marginLeft: 75 }}>
+                <div className="desk">7</div>
+                <div className="desk">8</div>
+                <div className="desk">9</div>
+                <div className="desk">10</div>
+              </div>
+              <div className="desk-block desk-block-3l" style={{ marginLeft: 75 }}>
+                <div className="desk">11</div>
+                <div className="desk">12</div>
+                <div className="desk">13</div>
+              </div>
+            </div>
+            {/* Middle Section */}
+            <div className="middle-section">
+              <div className="middle-row">
+                {/* Middle Left: Desks 14–25 */}
+                <div className="middle-left">
+                  <div className="desk-block desk-block-4">
+                    <div className="desk">36</div>
+                    <div className="desk">35</div>
+                    <div className="desk">30</div>
+                    <div className="desk">31</div>
+                  </div>
+                  <div className="desk-block desk-block-4">
+                    <div className="desk">29</div>
+                    <div className="desk">28</div>
+                    <div className="desk">22</div>
+                    <div className="desk">23</div>
+                  </div>
+                  <div className="desk-block desk-block-4">
+                    <div className="desk">21</div>
+                    <div className="desk">20</div>
+                    <div className="desk">14</div>
+                    <div className="desk">15</div>
+                  </div>
+                </div>
+                {/* Middle Right: Desks 26–36 */}
+                <div className="middle-right">
+                  <div className="desk-block" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', width: 140, height: 120, gap: 8 }}>
+                    <div className="desk" style={{ gridColumn: 1, gridRow: 1 }}>34</div>
+                    <div className="desk" style={{ gridColumn: 1, gridRow: 2 }}>32</div>
+                    <div className="desk" style={{ gridColumn: 2, gridRow: 2 }}>33</div>
+                  </div>
+                  <div className="desk-block desk-block-4">
+                    <div className="desk">27</div>
+                    <div className="desk">26</div>
+                    <div className="desk">24</div>
+                    <div className="desk">25</div>
+                  </div>
+                  <div className="desk-block desk-block-4">
+                    <div className="desk">19</div>
+                    <div className="desk">18</div>
+                    <div className="desk">16</div>
+                    <div className="desk">17</div>
+                  </div>
+                </div>
+                {/* Right Section: Desks 37–44 (aligned directly beside middle) */}
+                <div className="right-section">
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div className="pantry" style={{ marginRight: 10 }}>PANTRY</div>
+                  </div>
+                  <div className="desk-block desk-block-2h">
+                    <div className="desk">37</div>
+                    <div className="desk">38</div>
+                  </div>
+                  <div className="desk-block desk-block-4">
+                    <div className="desk">39</div>
+                    <div className="desk">40</div>
+                    <div className="desk">41</div>
+                    <div className="desk">42</div>
+                  </div>
+                  <div className="desk-block desk-block-2h">
+                    <div className="desk">43</div>
+                    <div className="desk">44</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl p-6 border border-white/20">
       <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 p-6 rounded-2xl">

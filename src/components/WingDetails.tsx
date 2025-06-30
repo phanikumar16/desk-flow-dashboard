@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,8 @@ import EmployeeDirectory from './EmployeeDirectory';
 import WingLayout from './WingLayout';
 import { supabase } from '../lib/supabaseClient';
 import { format, isWeekend } from 'date-fns';
+import AvailableSeatsA from './a-wing/AvailableSeatsA';
+import AvailableSeatsB from './b-wing/AvailableSeatsB';
 
 const WingDetails = () => {
   const { wingId } = useParams();
@@ -30,6 +31,11 @@ const WingDetails = () => {
 
   useEffect(() => {
     const fetchSeatCounts = async () => {
+      if (wingId === 'b-finance') {
+        setTotalSeatsCount(48);
+        setAvailableSeatsCount(0);
+        return;
+      }
       const { data: seats, error } = await supabase
         .from('seats')
         .select('*');
@@ -125,6 +131,10 @@ const WingDetails = () => {
     fetchSeatCounts();
   }, [wingId]);
 
+  // Force 0 available seats for B-Finance
+  const displayAvailableSeatsCount = wingId === 'b-finance' ? 0 : availableSeatsCount;
+  const displayTotalSeatsCount = wingId === 'b-finance' ? 48 : totalSeatsCount;
+
   if (!wing) {
     return <div>Wing not found</div>;
   }
@@ -164,13 +174,18 @@ const WingDetails = () => {
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <div className="flex items-center space-x-4">
                 <div className="text-center bg-blue-50 p-3 rounded-xl">
-                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">{totalSeatsCount}</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">{wingId === 'b-finance' ? 48 : totalSeatsCount}</div>
                   <div className="text-xs sm:text-sm text-gray-600">Total Seats</div>
                 </div>
                 <div className="text-center bg-green-50 p-3 rounded-xl">
-                  <div className="text-2xl sm:text-3xl font-bold text-green-600">{availableSeatsCount}</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-green-600">{wingId === 'b-finance' ? 0 : availableSeatsCount}</div>
                   <div className="text-xs sm:text-sm text-gray-600">Available</div>
                 </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                  {wingId === 'b-finance' ? '0/48 Available' : `${availableSeatsCount}/${totalSeatsCount} Available`}
+                </span>
               </div>
             </div>
           </div>
@@ -196,10 +211,16 @@ const WingDetails = () => {
           </TabsList>
 
           <TabsContent value="available-seats">
-            <AvailableSeats wingId={wingId} />
+            {wingId === 'a-tech' && <AvailableSeatsA wingId={wingId} />}
+            {wingId === 'b-finance' && <AvailableSeatsB />}
           </TabsContent>
           
           <TabsContent value="employee-directory">
+            {wingId === 'b-finance' && (
+              <div className="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded">
+                B wing employee details are not available. This feature is temporarily not working.
+              </div>
+            )}
             <EmployeeDirectory wingId={wingId} />
           </TabsContent>
           
@@ -207,6 +228,26 @@ const WingDetails = () => {
             <WingLayout wingId={wingId} />
           </TabsContent>
         </Tabs>
+
+        {/* Progress Bar for Available Seats */}
+        <div className="mt-4">
+          {wingId === 'b-finance' ? (
+            <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-3 bg-green-400 rounded-full" style={{ width: '0%' }}></div>
+            </div>
+          ) : (
+            <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-3 bg-green-400 rounded-full" style={{ width: `${Math.round((availableSeatsCount / totalSeatsCount) * 100)}%` }}></div>
+            </div>
+          )}
+        </div>
+        {/* Available Now for B-Finance */}
+        {wingId === 'b-finance' && (
+          <div className="mt-2 flex justify-between">
+            <span className="text-gray-600">Available Now</span>
+            <span className="text-green-600 font-bold">0</span>
+          </div>
+        )}
       </div>
     </div>
   );

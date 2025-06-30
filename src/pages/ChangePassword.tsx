@@ -1,11 +1,14 @@
-
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { useLocation } from 'react-router-dom';
 
 const ChangePassword: React.FC = () => {
+  const location = useLocation();
+  const emailFromState = location.state && location.state.email ? location.state.email : '';
+  const [email, setEmail] = useState(emailFromState);
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [otp, setOtp] = useState('');
-  const [email, setEmail] = useState('');
   const [step, setStep] = useState<'request' | 'verify'>('request');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -17,6 +20,21 @@ const ChangePassword: React.FC = () => {
     setLoading(true);
     setError('');
     setSuccess('');
+    if (!email) {
+      setError('Email is required.');
+      setLoading(false);
+      return;
+    }
+    if (!newPassword || !confirmPassword) {
+      setError('Please enter and confirm your new password.');
+      setLoading(false);
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.');
+      setLoading(false);
+      return;
+    }
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     setLoading(false);
     if (error) {
@@ -38,13 +56,11 @@ const ChangePassword: React.FC = () => {
       token: otp,
       type: 'email'
     });
-    
     if (!error) {
       // Update password after successful OTP verification
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword
       });
-      
       if (updateError) {
         setError(updateError.message);
       } else {
@@ -60,14 +76,38 @@ const ChangePassword: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <form onSubmit={step === 'request' ? handleRequestOtp : handleVerifyOtp} className="bg-white p-8 rounded shadow-md w-full max-w-md space-y-6">
         <h2 className="text-2xl font-bold text-center">Change Password</h2>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          className="w-full px-3 py-2 border rounded"
-          required
-        />
+        {emailFromState ? (
+          <div className="w-full px-3 py-2 border rounded bg-gray-100 text-gray-600">{emailFromState}</div>
+        ) : (
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className="w-full px-3 py-2 border rounded"
+            required
+          />
+        )}
+        {step === 'request' && (
+          <>
+            <input
+              type="password"
+              placeholder="New Password"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              className="w-full px-3 py-2 border rounded"
+              required
+            />
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              className="w-full px-3 py-2 border rounded"
+              required
+            />
+          </>
+        )}
         {step === 'verify' && (
           <>
             <input
@@ -75,14 +115,6 @@ const ChangePassword: React.FC = () => {
               placeholder="OTP from email"
               value={otp}
               onChange={e => setOtp(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
-              required
-            />
-            <input
-              type="password"
-              placeholder="New Password"
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
               className="w-full px-3 py-2 border rounded"
               required
             />
