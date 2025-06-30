@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -137,10 +138,13 @@ const WingDetails = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-sm sm:text-lg">🏢</span>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-pink-500 to-black rounded-lg flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-xs sm:text-sm">C</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">DeskSpace</h1>
+              <h1 className="text-xl sm:text-2xl font-bold">
+                <span className="text-pink-500">c</span>
+                <span className="text-black">prime</span>
+              </h1>
             </div>
             <Link to="/" className="text-blue-600 hover:text-blue-700 text-sm sm:text-base font-medium bg-white/70 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/90 transition-all border border-blue-200/50 shadow-sm">
               ← Back to Dashboard

@@ -1,15 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import StatusUpdateModal from './StatusUpdateModal';
 import { supabase } from '../lib/supabaseClient';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [bookingsOpen, setBookingsOpen] = useState(false);
@@ -17,22 +19,23 @@ const Dashboard = () => {
   const [seatCounts, setSeatCounts] = useState({ atech: { total: 64, available: 0 }, bfinance: { total: 48, available: 0 } });
   const { toast } = useToast();
 
+  const fetchProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    if (data) setCurrentUser(data);
+  };
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        if (data) setCurrentUser(data);
-      } else {
-        setCurrentUser(null);
-      }
-    };
     fetchProfile();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const fetchUserReservations = async () => {
@@ -43,41 +46,42 @@ const Dashboard = () => {
     fetchUserReservations();
   }, [currentUser]);
 
-  useEffect(() => {
-    const fetchSeatCounts = async () => {
-      const { data: seats } = await supabase.from('seats').select('*');
-      const { data: reservations } = await supabase.from('reservations').select('*');
-      const { data: userLeaves } = await supabase.from('user_leaves').select('*');
+  const fetchSeatCounts = async () => {
+    const { data: seats } = await supabase.from('seats').select('*');
+    const { data: reservations } = await supabase.from('reservations').select('*');
+    const { data: userLeaves } = await supabase.from('user_leaves').select('*');
+    
+    if (seats && reservations && userLeaves) {
+      const today = new Date().toISOString().slice(0, 10);
+      const UNASSIGNED_SEATS = ['A01', 'A02', 'A49'];
       
-      if (seats && reservations && userLeaves) {
-        const today = new Date().toISOString().slice(0, 10);
-        const UNASSIGNED_SEATS = ['A01', 'A02', 'A49'];
+      const atechSeats = seats.filter(seat => seat.wing === 'A-Tech');
+      const reservedToday = reservations.filter(r => r.date === today && r.status === 'active');
+      
+      let availableAtech = 0;
+      
+      atechSeats.forEach(seat => {
+        const isUnassigned = UNASSIGNED_SEATS.includes(seat.seat_number);
+        const isReservedToday = reservedToday.some(r => r.seat_id === seat.id);
         
-        const atechSeats = seats.filter(seat => seat.wing === 'A-Tech');
-        const reservedToday = reservations.filter(r => r.date === today && r.status === 'active');
-        
-        let availableAtech = 0;
-        
-        atechSeats.forEach(seat => {
-          const isUnassigned = UNASSIGNED_SEATS.includes(seat.seat_number);
-          const isReservedToday = reservedToday.some(r => r.seat_id === seat.id);
-          
-          if (isUnassigned && !isReservedToday) {
+        if (isUnassigned && !isReservedToday) {
+          availableAtech++;
+        } else if (!isUnassigned) {
+          const hasLeaveToday = userLeaves.some(l => l.seat_id == seat.id && l.date === today);
+          if (hasLeaveToday && !isReservedToday) {
             availableAtech++;
-          } else if (!isUnassigned) {
-            const hasLeaveToday = userLeaves.some(l => l.seat_id == seat.id && l.date === today);
-            if (hasLeaveToday && !isReservedToday) {
-              availableAtech++;
-            }
           }
-        });
-        
-        setSeatCounts({
-          atech: { total: 64, available: availableAtech },
-          bfinance: { total: 48, available: Math.floor(Math.random() * 8) + 5 }
-        });
-      }
-    };
+        }
+      });
+      
+      setSeatCounts({
+        atech: { total: 64, available: availableAtech },
+        bfinance: { total: 48, available: Math.floor(Math.random() * 8) + 5 }
+      });
+    }
+  };
+
+  useEffect(() => {
     fetchSeatCounts();
   }, []);
 
@@ -91,7 +95,7 @@ const Dashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setCurrentUser(null);
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   const handleCancelReservation = async (reservationId: string) => {
@@ -99,6 +103,17 @@ const Dashboard = () => {
     setUserReservations(userReservations.filter(r => r.id !== reservationId));
     toast({ title: 'Reservation cancelled', description: 'Your booking has been cancelled.' });
   };
+
+  const handleStatusUpdated = () => {
+    // Refresh user profile and seat counts after status update
+    fetchProfile();
+    fetchSeatCounts();
+  };
+
+  // Show loading while checking authentication
+  if (!currentUser) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div 
@@ -109,10 +124,13 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-sm sm:text-lg">🏢</span>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-pink-500 to-black rounded-lg flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-xs sm:text-sm">C</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">DeskSpace</h1>
+              <h1 className="text-xl sm:text-2xl font-bold">
+                <span className="text-pink-500">c</span>
+                <span className="text-black">prime</span>
+              </h1>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <DropdownMenu>
@@ -296,6 +314,7 @@ const Dashboard = () => {
           cluster: currentUser ? currentUser.cluster : '-',
           status: currentUser && currentUser.status ? currentUser.status : 'Present',
         }}
+        onStatusUpdated={handleStatusUpdated}
       />
 
       {/* My Bookings Modal */}

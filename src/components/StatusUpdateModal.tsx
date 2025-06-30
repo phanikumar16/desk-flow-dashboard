@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { format } from 'date-fns';
 import { isWeekend } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { supabase } from '../lib/supabaseClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface StatusUpdateModalProps {
   isOpen: boolean;
@@ -19,11 +21,13 @@ interface StatusUpdateModalProps {
     cluster: string;
     status: string;
   };
+  onStatusUpdated?: () => void;
 }
 
-const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, currentUser }) => {
+const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, currentUser, onStatusUpdated }) => {
   const [selectedStatus, setSelectedStatus] = useState(currentUser.status);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const { toast } = useToast();
 
   const statusOptions = [
     { value: 'Present', label: 'Present', color: 'bg-green-500', icon: '✅' },
@@ -39,41 +43,99 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
   };
 
   const handleUpdateStatus = async () => {
-    // Update the user's status in Supabase
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ status: selectedStatus })
-        .eq('id', user.id);
-      if (updateError) {
-        console.error('Profile update error:', updateError);
-      }
-      // If status is Leave or WFH, insert leave dates
-      if ((selectedStatus === 'Leave' || selectedStatus === 'Work From Home') && selectedDates.length > 0) {
-        // Fetch user's seat_number from profile
-        const { data: profile } = await supabase.from('profiles').select('seat_number').eq('id', user.id).single();
-        if (profile && profile.seat_number) {
-          // Fetch seat_id (BIGINT) from seats table using seat_number
-          const { data: seatRow } = await supabase.from('seats').select('id').eq('seat_number', profile.seat_number).single();
-          const seat_id = seatRow?.id;
-          if (seat_id) {
-            const leaveRows = selectedDates.map(date => ({
-              user_id: user.id,
-              seat_id: seat_id,
-              date: date.toISOString().slice(0, 10),
-              type: selectedStatus
-            }));
-            const { error: leaveError } = await supabase.from('user_leaves').insert(leaveRows);
-            if (leaveError) {
-              console.error('user_leaves insert error:', leaveError);
+    try {
+      // Update the user's status in Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ status: selectedStatus })
+          .eq('id', user.id);
+        
+        if (updateError) {
+          console.error('Profile update error:', updateError);
+          toast({ 
+            title: 'Error', 
+            description: 'Failed to update status. Please try again.',
+            variant: 'destructive'
+          });
+          return;
+        }
+
+        // If status is Leave or WFH, insert leave dates
+        if ((selectedStatus === 'Leave' || selectedStatus === 'Work From Home') && selectedDates.length > 0) {
+          // Fetch user's seat_number from profile
+          const { data: profile } = await supabase.from('profiles').select('seat_number').eq('id', user.id).single();
+          if (profile && profile.seat_number) {
+            // Fetch seat_id (BIGINT) from seats table using seat_number
+            const { data: seatRow } = await supabase.from('seats').select('id').eq('seat_number', profile.seat_number).single();
+            const seat_id = seatRow?.id;
+            if (seat_id) {
+              // Clear existing future leave dates for this seat
+              const today = new Date().toISOString().slice(0, 10);
+              await supabase
+                .from('user_leaves')
+                .delete()
+                .eq('seat_id', seat_id)
+                .gte('date', today);
+
+              // Insert new leave dates
+              const leaveRows = selectedDates.map(date => ({
+                user_id: user.id,
+                seat_id: seat_id,
+                date: date.toISOString().slice(0, 10),
+                type: selectedStatus
+              }));
+              
+              const { error: leaveError } = await supabase.from('user_leaves').insert(leaveRows);
+              if (leaveError) {
+                console.error('user_leaves insert error:', leaveError);
+                toast({ 
+                  title: 'Warning', 
+                  description: 'Status updated but failed to save leave dates.',
+                  variant: 'destructive'
+                });
+              }
+            } else {
+              console.error('No seat_id found for seat_number', profile.seat_number);
             }
-          } else {
-            console.error('No seat_id found for seat_number', profile.seat_number);
+          }
+        } else if (selectedStatus === 'Present') {
+          // Clear all future leave dates when status is set to Present
+          const { data: profile } = await supabase.from('profiles').select('seat_number').eq('id', user.id).single();
+          if (profile && profile.seat_number) {
+            const { data: seatRow } = await supabase.from('seats').select('id').eq('seat_number', profile.seat_number).single();
+            const seat_id = seatRow?.id;
+            if (seat_id) {
+              const today = new Date().toISOString().slice(0, 10);
+              await supabase
+                .from('user_leaves')
+                .delete()
+                .eq('seat_id', seat_id)
+                .gte('date', today);
+            }
           }
         }
+
+        toast({ 
+          title: 'Success', 
+          description: 'Your status has been updated successfully.'
+        });
+
+        // Trigger refresh of parent components
+        if (onStatusUpdated) {
+          onStatusUpdated();
+        }
       }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to update status. Please try again.',
+        variant: 'destructive'
+      });
     }
+    
     onClose();
   };
 
@@ -123,7 +185,7 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
           {/* Date Selection for Leave/WFH */}
           {(selectedStatus === 'Leave' || selectedStatus === 'Work From Home') && (
             <div>
-              <h3 className="font-medium text-gray-900 mb-3">Select Dates</h3>
+              <h3 className="font-medium text-gray-900 mb-3">Select Dates (Weekdays Only)</h3>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">

@@ -8,7 +8,7 @@ import { format, isWeekend } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '../lib/supabaseClient';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface AvailableSeatsProps {
   wingId: string | undefined;
@@ -85,6 +85,8 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
       .channel('public:user_leaves')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_leaves' }, fetchUserLeaves)
       .subscribe();
+
+    fetchReservations();
 
     return () => {
       supabase.removeChannel(subscription);
@@ -197,6 +199,8 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
   }
 
   const UNASSIGNED_SEATS = ['A01', 'A02', 'A49'];
+  
+  // Filter seats that have at least one available date
   const alwaysAvailableSeats = availableSeats.filter(seat => {
     if (!UNASSIGNED_SEATS.includes(seat.seat_number)) return false;
     const days = Array.from({length: 30}, (_, i) => {
@@ -207,7 +211,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
     const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
     const availableDays = days.filter(d => {
       const dateStr = format(d, 'yyyy-MM-dd');
-      return d >= new Date() && !reservedDates.includes(dateStr);
+      return d >= new Date() && !isWeekend(d) && !reservedDates.includes(dateStr);
     });
     return availableDays.length > 0;
   });
@@ -216,9 +220,11 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
   const assignedAvailableSeats = availableSeats.filter(seat => {
     if (UNASSIGNED_SEATS.includes(seat.seat_number)) return false;
     const leaveDates = userLeaves.filter(l => l.seat_id == seat.id).map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
-    const futureLeaveDates = leaveDates.filter(d => d >= todayStr);
+    const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(new Date(d)));
     const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
-    const availableDates = futureLeaveDates.filter(d => !reservedDates.includes(d));
+    // Filter out weekends from leave dates
+    const weekdayLeaveDates = futureLeaveDates.filter(d => !isWeekend(new Date(d)));
+    const availableDates = weekdayLeaveDates.filter(d => !reservedDates.includes(d));
     return availableDates.length > 0;
   });
 
@@ -244,13 +250,13 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
             {isWeekendToday ? (
               <div className="mt-2">
                 <p className="text-lg font-semibold text-orange-600 mb-1">🏖️ Holiday - Weekend</p>
-                <p className="text-sm text-gray-600">Booking is still available for weekend days</p>
+                <p className="text-sm text-gray-600">Seats available for weekday booking only</p>
               </div>
             ) : (
               <>
                 <p className="text-sm sm:text-base text-gray-600">{displayedSeats.length} seats available for booking in A-Tech</p>
                 <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                  Includes unassigned seats and seats where employees are on leave or working from home
+                  Includes unassigned seats and seats where employees are on leave or working from home (weekdays only)
                 </p>
               </>
             )}
@@ -258,7 +264,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
           <div className="text-left sm:text-right">
             <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600 bg-white/50 px-3 py-2 rounded-full">
               <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>Today, {currentDateString}</span>
+              <span>Today, {format(today, 'EEEE, dd/MM/yyyy')}</span>
             </div>
           </div>
         </div>
@@ -279,7 +285,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
           if (!isUnassigned) {
             const todayStr = format(new Date(), 'yyyy-MM-dd');
             const leaveDates = userLeaves.filter(l => l.seat_id == seat.id).map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
-            const futureLeaveDates = leaveDates.filter(d => d >= todayStr);
+            const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(new Date(d)));
             const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
             availableDates = futureLeaveDates.filter(d => !reservedDates.includes(d));
           }
@@ -328,7 +334,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Select dates for reservation (excluding weekends):
+                Select dates for reservation (weekdays only):
               </label>
               {modalSeat && (() => {
                 const isUnassigned = UNASSIGNED_SEATS.includes(modalSeat.seat_number);
