@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface WingLayoutProps {
@@ -9,7 +10,8 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
     return (
       <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl p-6 border border-white/20">
         <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 p-6 rounded-2xl">
-          <style>{`
+          <style>
+            {`
             .office-container {
               font-family: Arial, sans-serif;
               background-color: #f4f4f4;
@@ -316,329 +318,126 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
     );
   }
 
-  // B-Finance Wing Layout
+  // B-Finance Wing Layout - Restored to original simple design
   return (
     <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl p-6 border border-white/20">
       <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 p-6 rounded-2xl">
-        <style>{`
-          body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 20px;
-            padding: 0;
-          }
-          .office-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            border: 3px solid #333;
-            border-radius: 10px;
-            padding: 20px 0px 10px 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-          }
-          .office-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            position: relative;
-          }
-          .top-section {
-            display: flex;
-            gap: 15px;
-            align-items: stretch;
-          }
-          .meeting-room {
-            flex: 1;
-            padding: 25px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 2px solid #333;
-            background: linear-gradient(135deg, #FFE4B5, #F4A460);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-          }
-          .meeting-room:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-            border-color: #FF8C00;
-          }
-          .server {
-            background: linear-gradient(135deg, #E6E6FA, #DDA0DD);
-          }
-          .server:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-            border-color: #9370DB;
-          }
-          .main-work-area {
-            display: flex;
-            gap: 0px;
-            align-items: flex-start;
-          }
-          .left-section {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            min-width: 200px;
-            align-items: flex-start;
-            margin-left: -20px;
-          }
-          .left-top-row {
-            display: flex;
-            gap: 0px;
-            align-items: flex-start;
-          }
-          .middle-section {
-            display: flex;
-            flex-direction: column;
-            gap: 10x;
-            flex: 1;
-            margin-left: 120px;
-          }
-          .middle-row {
-            display: flex;
-            gap: 5px;
-            width: 100%;
-          }
-          .middle-left, .middle-right {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-          }
-          .right-section {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            min-width: 350px;
-          }
-          .pantry {
-            background: #f0f0f0;
-            border: 2px solid #999;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 80px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-          }
-          .pantry:hover {
-            transform: translateY(-2px) scale(1.02);
-            background: #e8e8e8;
-            border-color: #666;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-          }
-          .desk-block {
-            background: linear-gradient(135deg, #E6F3FF, #B3D9FF);
-            border: 2px solid #0066CC;
-            border-radius: 8px;
-            padding: 12px;
-            display: grid;
-            gap: 8px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-          }
-          .desk-block:hover {
-            transform: translateY(-2px) scale(1.01);
-            box-shadow: 0 4px 8px rgba(0,102,204,0.2);
-            border-color: #004499;
-          }
-          .desk-block-2v-small {
-            grid-template-columns: 1fr;
-            grid-template-rows: 1fr 1fr;
-            width: 50px;
-          }
-          .desk-block-4 {
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            width: 140px;
-          }
-          .desk-block-2h {
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr;
-            width: 140px;
-            height: 60px;
-          }
-          .desk-block-3l, .desk-block-3l-normal {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            width: 140px;
-            height: 120px;
-          }
-          .desk-block-3l .desk:nth-child(1),
-          .desk-block-3l-normal .desk:nth-child(1) { grid-column: 1; grid-row: 1; }
-          .desk-block-3l .desk:nth-child(2),
-          .desk-block-3l-normal .desk:nth-child(2) { grid-column: 2; grid-row: 1; }
-          .desk-block-3l .desk:nth-child(3) { grid-column: 1; grid-row: 2; }
-          .desk-block-3l-normal .desk:nth-child(3) { grid-column: 2; grid-row: 2; }
-
-          .desk {
-            background: white;
-            border: 1px solid #0066CC;
-            border-radius: 4px;
-            padding: 8px;
-            text-align: center;
-            font-size: 12px;
-            font-weight: bold;
-            color: #0066CC;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 35px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-          }
-          .desk:hover {
-            transform: translateY(-1px) scale(1.05);
-            background: #E6F3FF;
-            border-color: #004499;
-            color: #004499;
-            box-shadow: 0 2px 4px rgba(0,102,204,0.3);
-          }
-          .walking-area {
-            background: linear-gradient(135deg, #f8f8f8, #e8e8e8);
-            border: 1px dashed #ccc;
-            border-radius: 5px;
-            padding: 10px;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-            font-style: italic;
-            transition: all 0.3s ease;
-            cursor: pointer;
-          }
-          .walking-area:hover {
-            transform: translateY(-1px);
-            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
-            border-color: #999;
-            color: #333;
-          }
-          .walking-horizontal {
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-          .walking-vertical {
-            width: 30px;
-          }
-        `}
-        </style>
-        
-        <div className="office-container">
-          <h1 style={{textAlign: 'center', color: '#333', marginBottom: '30px'}}>B-WING OFFICE LAYOUT</h1>
-          <div className="office-layout">
+        <div className="office-container" style={{
+          fontFamily: 'Arial, sans-serif',
+          backgroundColor: '#f4f4f4',
+          padding: '20px',
+          borderRadius: '10px',
+          boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)'
+        }}>
+          <h1 style={{textAlign: 'center', color: '#333', marginBottom: '30px', fontSize: '24px', fontWeight: 'bold'}}>
+            B-WING OFFICE LAYOUT
+          </h1>
+          <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
             {/* Top Section */}
-            <div className="top-section">
-              <div className="meeting-room">LOTUS</div>
-              <div className="meeting-room">PEONY</div>
-              <div className="meeting-room">IRIS</div>
-              <div className="meeting-room server">SERVER</div>
+            <div style={{display: 'flex', justifyContent: 'space-around', marginBottom: '10px'}}>
+              <div style={{backgroundColor: '#e9ecef', border: '1px solid #ced4da', padding: '10px', borderRadius: '5px', textAlign: 'center', width: '120px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>LOTUS</div>
+              <div style={{backgroundColor: '#e9ecef', border: '1px solid #ced4da', padding: '10px', borderRadius: '5px', textAlign: 'center', width: '120px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>PEONY</div>
+              <div style={{backgroundColor: '#e9ecef', border: '1px solid #ced4da', padding: '10px', borderRadius: '5px', textAlign: 'center', width: '120px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>IRIS</div>
+              <div style={{backgroundColor: '#adb5bd', color: 'white', border: '1px solid #ced4da', padding: '10px', borderRadius: '5px', textAlign: 'center', width: '120px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>SERVER</div>
             </div>
             
             {/* Walking Area */}
-            <div className="walking-area walking-horizontal">Walking Area</div>
+            <div style={{backgroundColor: '#d1d1d1', color: '#555', textAlign: 'center', padding: '5px', borderRadius: '3px', width: '100%'}}>Walking Area</div>
+            
             {/* Main Work Area */}
-            <div className="main-work-area">
+            <div style={{display: 'flex', justifyContent: 'space-between'}}>
               {/* Left Section */}
-              <div className="left-section">
-                <div className="left-top-row">
-                  <div className="desk-block desk-block-2v-small">
-                    <div className="desk">1</div>
-                    <div className="desk">2</div>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                <div style={{display: 'flex', gap: '10px'}}>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>1</div>
+                    <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>2</div>
                   </div>
-                  <div className="desk-block desk-block-4">
-                    <div className="desk">3</div>
-                    <div className="desk">4</div>
-                    <div className="desk">5</div>
-                    <div className="desk">6</div>
+                  <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridGap: '10px', width: '120px'}}>
+                    <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>3</div>
+                    <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>4</div>
+                    <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>5</div>
+                    <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>6</div>
                   </div>
                 </div>
-                <div className="desk-block desk-block-4" style={{marginLeft: '75px'}}>
-                  <div className="desk">7</div>
-                  <div className="desk">8</div>
-                  <div className="desk">9</div>
-                  <div className="desk">10</div>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridGap: '10px', width: '120px', marginLeft: '75px'}}>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>7</div>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>8</div>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>9</div>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>10</div>
                 </div>
-                <div className="desk-block desk-block-3l"  style={{marginLeft: '75px'}}>
-                  <div className="desk">11</div>
-                  <div className="desk">12</div>
-                  <div className="desk">13</div>
+                <div style={{display: 'flex', gap: '10px', width: '170px', marginLeft: '75px'}}>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>11</div>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>12</div>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>13</div>
                 </div>
               </div>
+              
               {/* Middle Section */}
-              <div className="middle-section">
-                <div className="middle-row">
+              <div style={{flexGrow: 1, margin: '0 20px', display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between'}}>
                   {/* Middle Left: Desks 14–25 */}
-                  <div className="middle-left">
-                    <div className="desk-block desk-block-4">
-                      <div className="desk">14</div>
-                      <div className="desk">15</div>
-                      <div className="desk">16</div>
-                      <div className="desk">17</div>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridGap: '10px', width: '120px'}}>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>14</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>15</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>16</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>17</div>
                     </div>
-                    <div className="desk-block desk-block-4">
-                      <div className="desk">18</div>
-                      <div className="desk">19</div>
-                      <div className="desk">20</div>
-                      <div className="desk">21</div>
+                    <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridGap: '10px', width: '120px'}}>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>18</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>19</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>20</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>21</div>
                     </div>
-                    <div className="desk-block desk-block-4">
-                      <div className="desk">22</div>
-                      <div className="desk">23</div>
-                      <div className="desk">24</div>
-                      <div className="desk">25</div>
+                    <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridGap: '10px', width: '120px'}}>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>22</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>23</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>24</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>25</div>
                     </div>
                   </div>
                   {/* Middle Right: Desks 26–36 */}
-                  <div className="middle-right">
-                    <div className="desk-block" style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', width: '140px', height: '120px', gap: '8px'}}>
-                      <div className="desk" style={{gridColumn: 1, gridRow: 1}}>26</div>
-                      <div className="desk" style={{gridColumn: 1, gridRow: 2}}>27</div>
-                      <div className="desk" style={{gridColumn: 2, gridRow: 2}}>28</div>
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', width: '140px', height: '120px', gap: '8px'}}>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', gridColumn: 1, gridRow: 1}}>26</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', gridColumn: 1, gridRow: 2}}>27</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', gridColumn: 2, gridRow: 2}}>28</div>
                     </div>
-                    <div className="desk-block desk-block-4">
-                      <div className="desk">29</div>
-                      <div className="desk">30</div>
-                      <div className="desk">31</div>
-                      <div className="desk">32</div>
+                    <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridGap: '10px', width: '120px'}}>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>29</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>30</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>31</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>32</div>
                     </div>
-                    <div className="desk-block desk-block-4">
-                      <div className="desk">33</div>
-                      <div className="desk">34</div>
-                      <div className="desk">35</div>
-                      <div className="desk">36</div>
-                    </div>
-                  </div>
-                  {/* Right Section: Desks 37–44 (aligned directly beside middle) */}
-                  <div className="right-section">
-                    <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-                      <div className="pantry" style={{marginRight: '10px'}}>PANTRY</div>
-                    </div>
-                    <div className="desk-block desk-block-2h">
-                      <div className="desk">37</div>
-                      <div className="desk">38</div>
-                    </div>
-                    <div className="desk-block desk-block-4">
-                      <div className="desk">39</div>
-                      <div className="desk">40</div>
-                      <div className="desk">41</div>
-                      <div className="desk">42</div>
-                    </div>
-                    <div className="desk-block desk-block-2h">
-                      <div className="desk">43</div>
-                      <div className="desk">44</div>
+                    <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridGap: '10px', width: '120px'}}>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>33</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>34</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>35</div>
+                      <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>36</div>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Right Section: Desks 37–44 */}
+              <div style={{display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end'}}>
+                <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+                  <div style={{backgroundColor: '#a7c957', color: 'white', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '80px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', marginRight: '10px'}}>PANTRY</div>
+                </div>
+                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px'}}>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>37</div>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>38</div>
+                </div>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridGap: '10px', width: '120px'}}>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>39</div>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>40</div>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>41</div>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>42</div>
+                </div>
+                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px'}}>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>43</div>
+                  <div style={{backgroundColor: '#fff', border: '1px solid #ced4da', padding: '8px', borderRadius: '5px', textAlign: 'center', width: '50px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'}}>44</div>
                 </div>
               </div>
             </div>
