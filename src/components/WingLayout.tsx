@@ -13,6 +13,10 @@ const WingLayout: React.FC<WingLayoutProps> = ({ wingId }) => {
           <style>
             {`
             /* ===== BASE STYLES ===== */
+            * {
+              box-sizing: border-box;
+            }
+
             .office-container {
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               background: white;
