@@ -63,7 +63,7 @@ body {
   gap: 5px;
   min-width: 200px;
   align-items: flex-start;
-  margin-left: -20px;
+  margin-left: 0;
 }
 .left-top-row {
   display: flex;
@@ -106,6 +106,8 @@ body {
   height: 80px;
   transition: all 0.3s ease;
   cursor: pointer;
+  width: 43%;
+  max-width: 340px;
 }
 .pantry:hover {
   transform: translateY(-2px) scale(1.02);
@@ -206,4 +208,16 @@ body {
 }
 .walking-vertical {
   width: 30px;
+}
+.meeting-hall {
+  width: 180px;
+}
+.small-cabin {
+  width: 180px;
+}
+.group-cabin {
+  width: 180px;
+}
+.small-meeting-room {
+  width: 43%;
 } 
