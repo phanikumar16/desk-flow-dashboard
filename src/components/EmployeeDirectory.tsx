@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,7 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
   const [reservations, setReservations] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
   const [userLeaves, setUserLeaves] = useState<any[]>([]);
+  const [seats, setSeats] = useState<any[]>([]);
   const [unassignedModalOpen, setUnassignedModalOpen] = useState(false);
   const [modalSeat, setModalSeat] = useState<string | null>(null);
   const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
@@ -83,36 +85,36 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
   }
 
   useEffect(() => {
-    const fetchReservations = async () => {
-      const { data } = await supabase.from('reservations').select('*');
-      setReservations(data || []);
+    const fetchData = async () => {
+      const { data: reservationsData } = await supabase.from('reservations').select('*');
+      const { data: profilesData } = await supabase.from('profiles').select('*');
+      const { data: seatsData } = await supabase.from('seats').select('*');
+      const { data: userLeavesData } = await supabase.from('user_leaves').select('*');
+      
+      setReservations(reservationsData || []);
+      setProfiles(profilesData || []);
+      setSeats(seatsData || []);
+      setUserLeaves(userLeavesData || []);
     };
-    const fetchProfiles = async () => {
-      const { data } = await supabase.from('profiles').select('*');
-      setProfiles(data || []);
-    };
-    const fetchUserLeaves = async () => {
-      const { data } = await supabase.from('user_leaves').select('*');
-      setUserLeaves(data || []);
-    };
-    fetchReservations();
-    fetchProfiles();
-    fetchUserLeaves();
+    
+    fetchData();
   }, []);
 
   // Fetch today's statuses for all employees
   useEffect(() => {
     const fetchTodayStatuses = async () => {
       const today = new Date().toISOString().slice(0, 10);
-      const { data: seats } = await supabase.from('seats').select('*');
-      const { data: leaves } = await supabase.from('user_leaves').select('*').eq('date', today);
+      const { data: todayLeaves } = await supabase
+        .from('user_leaves')
+        .select('*')
+        .eq('date', today);
       
-      if (seats && leaves) {
+      if (seats.length > 0 && todayLeaves) {
         const statusMap: {[key: string]: string} = {};
         
         // Map seat numbers to today's status
         seats.forEach(seat => {
-          const todayLeave = leaves.find(l => l.seat_id == seat.id);
+          const todayLeave = todayLeaves.find(l => l.seat_id === seat.id);
           if (todayLeave) {
             statusMap[seat.seat_number] = todayLeave.type;
           } else {
@@ -124,20 +126,23 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
       }
     };
     
-    fetchTodayStatuses();
-  }, [userLeaves]);
+    if (seats.length > 0) {
+      fetchTodayStatuses();
+    }
+  }, [seats, userLeaves]);
 
   const getNextAvailableDate = (employee: any) => {
-    if (employee.status === 'Present') return null;
+    const todayStatus = todayStatuses[employee.seatNumber];
+    if (todayStatus === 'Present') return null;
     
-    // Find the seat ID from profiles
-    const profile = profiles.find(p => p.seat_number === employee.seatNumber);
-    if (!profile) return null;
+    // Find the seat from seats data
+    const seat = seats.find(s => s.seat_number === employee.seatNumber);
+    if (!seat) return null;
 
     const today = new Date().toISOString().slice(0, 10);
-    const leaveDates = userLeaves.filter(l => l.seat_id == profile.id).map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
+    const leaveDates = userLeaves.filter(l => l.seat_id === seat.id).map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
     const futureLeaveDates = leaveDates.filter(d => d >= today).sort();
-    const reservedDates = reservations.filter(r => r.seat_id === profile.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
+    const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
     
     // Find the first available date
     for (const leaveDate of futureLeaveDates) {
@@ -150,7 +155,6 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
 
   const EmployeeCard = ({ employee }: { employee: typeof employees[0] }) => {
     const empColor = stringToColor(employee.name + employee.seatNumber);
-    const gradientBg = `linear-gradient(135deg, ${empColor}15 0%, #fff 100%)`;
     const nextAvailable = getNextAvailableDate(employee);
     
     // Get today's status for this employee
@@ -161,8 +165,12 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
     if (UNASSIGNED_SEATS.includes(employee.seatNumber)) {
       const todayStr = new Date().toISOString().slice(0, 10);
       const futureReservations = reservations
-        .filter(r => r.seat_id && employee.seatNumber && r.status === 'active' && r.date >= todayStr && employee.seatNumber === r.seat_number)
+        .filter(r => {
+          const seat = seats.find(s => s.seat_number === employee.seatNumber);
+          return seat && r.seat_id === seat.id && r.status === 'active' && r.date >= todayStr;
+        })
         .sort((a, b) => a.date.localeCompare(b.date));
+      
       if (futureReservations.length > 0) {
         const userProfile = profiles.find(p => p.id === futureReservations[0].user_id);
         reservationInfo = (
@@ -190,12 +198,6 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
           }
         }}
       >
-        <div
-          className="absolute inset-0 pointer-events-none z-0 opacity-20"
-          style={{
-            background: 'none',
-          }}
-        />
         <div className="flex items-center space-x-4 flex-1 relative z-20">
           <div className="relative">
             <Avatar className="w-14 h-14 shadow-lg ring-2 ring-white/50" style={{ backgroundColor: empColor }}>
@@ -262,9 +264,11 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
   const renderUnassignedModal = () => {
     if (!modalSeat) return null;
     const todayStr = new Date().toISOString().slice(0, 10);
+    const seat = seats.find(s => s.seat_number === modalSeat);
     const futureReservations = reservations
-      .filter(r => r.seat_number === modalSeat && r.status === 'active' && r.date >= todayStr)
+      .filter(r => seat && r.seat_id === seat.id && r.status === 'active' && r.date >= todayStr)
       .sort((a, b) => a.date.localeCompare(b.date));
+    
     return (
       <Dialog open={unassignedModalOpen} onOpenChange={setUnassignedModalOpen}>
         <DialogContent className="max-w-md mx-4 bg-white/95 backdrop-blur-md">
