@@ -13,7 +13,7 @@ interface EmployeeDirectoryProps {
   wingId: string | undefined;
 }
 
-const UNASSIGNED_SEATS = ['A01', 'A02', 'A49'];
+const UNASSIGNED_SEATS = ['A01', 'A02'];
 
 const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
   if (wingId === 'b-finance') {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,7 +63,7 @@ const AvailableSeatsA: React.FC<AvailableSeatsAProps> = ({ wingId }) => {
       console.log('Fetched data:', { seats, userLeaves, reservations });
 
       if (seats) {
-        const UNASSIGNED_SEATS = ['A01', 'A02', 'A49'];
+        const UNASSIGNED_SEATS = ['A01', 'A02'];
         const available = [];
 
         for (const seat of seats) {
@@ -97,32 +96,33 @@ const AvailableSeatsA: React.FC<AvailableSeatsAProps> = ({ wingId }) => {
               });
             }
           } else {
+            // Debug: log seat and user seat number before ownership check
+            console.log('Comparing seat:', seat.seat_number, 'with user seat:', userProfile?.seat_number);
+            if (
+              userProfile &&
+              seat.seat_number.trim().toLowerCase() === String(userProfile.seat_number).trim().toLowerCase()
+            ) continue;
+
             // For assigned seats, check if user is on leave or WFH
             const seatLeaves = userLeaves?.filter(l => 
-              l.seat_id == seat.id && 
+              String(l.seat_id) === String(seat.id) && 
               (l.type === 'Leave' || l.type === 'Work From Home')
             ) || [];
             
             const availableDates = [];
-
             for (const leave of seatLeaves) {
               const leaveDate = typeof leave.date === 'string' ? leave.date.slice(0, 10) : format(new Date(leave.date), 'yyyy-MM-dd');
-              const checkDate = new Date(leaveDate);
-              
-              if (checkDate >= today && !isWeekend(checkDate)) {
-                // Check if this seat is not reserved on this date
+              // Only add if not reserved and not weekend
+              if (!isWeekend(new Date(leaveDate))) {
                 const isReserved = reservations?.some(r => 
-                  r.seat_id === seat.id && r.date === leaveDate
+                  String(r.seat_id) === String(seat.id) && r.date === leaveDate
                 );
                 if (!isReserved) {
                   availableDates.push(leaveDate);
                 }
               }
             }
-
-            // Add seat if it has any available dates
             if (availableDates.length > 0) {
-              console.log(`Seat ${seat.seat_number} available on:`, availableDates);
               available.push({
                 ...seat,
                 type: 'leave',
@@ -150,9 +150,16 @@ const AvailableSeatsA: React.FC<AvailableSeatsAProps> = ({ wingId }) => {
 
   useEffect(() => {
     fetchUserProfile();
-    fetchAvailableSeats();
+  }, [wingId]);
 
-    // Set up real-time subscriptions
+  useEffect(() => {
+    if (userProfile) {
+      fetchAvailableSeats();
+    }
+  }, [wingId, userProfile]);
+
+  // Set up real-time subscriptions
+  useEffect(() => {
     const leavesSubscription = supabase
       .channel('leaves-changes-available')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_leaves' }, () => {

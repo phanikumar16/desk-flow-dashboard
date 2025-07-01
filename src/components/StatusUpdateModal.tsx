@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -70,36 +69,39 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
             // Fetch seat_id (BIGINT) from seats table using seat_number
             const { data: seatRow } = await supabase.from('seats').select('id').eq('seat_number', profile.seat_number).single();
             const seat_id = seatRow?.id;
-            if (seat_id) {
-              // Clear existing future leave dates for this seat
-              const today = new Date().toISOString().slice(0, 10);
-              await supabase
-                .from('user_leaves')
-                .delete()
-                .eq('seat_id', seat_id)
-                .gte('date', today);
+            if (!seat_id) {
+              toast({ title: 'Error', description: 'Could not find your seat. Please contact admin.', variant: 'destructive' });
+              return;
+            }
+            // Clear existing future leave dates for this seat
+            const today = new Date().toISOString().slice(0, 10);
+            await supabase
+              .from('user_leaves')
+              .delete()
+              .eq('seat_id', seat_id)
+              .gte('date', today);
 
-              // Insert new leave dates
-              const leaveRows = selectedDates.map(date => ({
-                user_id: user.id,
-                seat_id: seat_id,
-                date: date.toISOString().slice(0, 10),
-                type: selectedStatus
-              }));
-              
-              const { error: leaveError } = await supabase.from('user_leaves').insert(leaveRows);
-              if (leaveError) {
-                console.error('user_leaves insert error:', leaveError);
-                toast({ 
-                  title: 'Warning', 
-                  description: 'Status updated but failed to save leave dates.',
-                  variant: 'destructive'
-                });
-              }
-            } else {
-              console.error('No seat_id found for seat_number', profile.seat_number);
+            // Insert new leave dates
+            const leaveRows = selectedDates.map(date => ({
+              user_id: user.id,
+              seat_id: seat_id,
+              date: date.toISOString().slice(0, 10),
+              type: selectedStatus
+            }));
+            console.log('Inserting user_leaves:', leaveRows);
+            const { error: leaveError } = await supabase.from('user_leaves').insert(leaveRows);
+            if (leaveError) {
+              console.error('user_leaves insert error:', leaveError);
+              toast({ 
+                title: 'Warning', 
+                description: 'Status updated but failed to save leave dates.',
+                variant: 'destructive'
+              });
             }
           }
+        } else if ((selectedStatus === 'Leave' || selectedStatus === 'Work From Home') && selectedDates.length === 0) {
+          toast({ title: 'Error', description: 'Please select at least one date for leave or work from home.', variant: 'destructive' });
+          return;
         } else if (selectedStatus === 'Present') {
           // Clear all future leave dates when status is set to Present
           const { data: profile } = await supabase.from('profiles').select('seat_number').eq('id', user.id).single();

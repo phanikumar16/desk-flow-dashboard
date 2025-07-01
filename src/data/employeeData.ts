@@ -2,13 +2,12 @@ export const employees = [
   // Unassigned seats
   { id: 'A01', seatNumber: 'A01', name: 'Unassigned', cluster: 'Available', status: 'Available', type: 'onsite', wing: 'A-Tech' },
   { id: 'A02', seatNumber: 'A02', name: 'Unassigned', cluster: 'Available', status: 'Available', type: 'onsite', wing: 'A-Tech' },
-  { id: 'A49', seatNumber: 'A49', name: 'Unassigned', cluster: 'Available', status: 'Available', type: 'onsite', wing: 'A-Tech' },
   
   // Assigned employees
   { id: 'A03', seatNumber: 'A03', name: 'Farhan Akthar', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A04', seatNumber: 'A04', name: 'Suba Shree K B', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A05', seatNumber: 'A05', name: 'Harini R', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
-  { id: 'A06', seatNumber: 'A06', name: 'Phani Kumar', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech', email: 'chinthamekala.phanikumar@cprime.com' },
+  { id: 'A06', seatNumber: 'A06', name: 'Phani Kumar', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech'},
   { id: 'A07', seatNumber: 'A07', name: 'Matcha Bhavana', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A08', seatNumber: 'A08', name: 'Viswa AK', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A09', seatNumber: 'A09', name: 'Yogesh Srivastava', cluster: 'Cloud Eng', status: 'Present', type: 'onsite', wing: 'A-Tech' },
@@ -51,6 +50,7 @@ export const employees = [
   { id: 'A46', seatNumber: 'A46', name: 'Arul Prasad', cluster: 'Atlassian', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A47', seatNumber: 'A47', name: 'Pavithra Seetharaman', cluster: 'Atlassian', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A48', seatNumber: 'A48', name: 'Mohamed Hariz', cluster: 'Atlassian', status: 'Present', type: 'onsite', wing: 'A-Tech' },
+  { id: 'A49', seatNumber: 'A49', name: 'Stanley A', cluster: 'Atlassian', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A50', seatNumber: 'A50', name: 'Shaun Eliot Alex Nicholas', cluster: 'Atlassian', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A51', seatNumber: 'A51', name: 'Sai Jai Bhargav', cluster: 'Atlassian', status: 'Present', type: 'onsite', wing: 'A-Tech' },
   { id: 'A52', seatNumber: 'A52', name: 'V Devendra Reddy', cluster: 'Atlassian', status: 'Present', type: 'onsite', wing: 'A-Tech' },
