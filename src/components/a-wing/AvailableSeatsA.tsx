@@ -16,11 +16,6 @@ const AvailableSeatsA: React.FC<AvailableSeatsAProps> = ({ wingId }) => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchUserProfile();
-    fetchAvailableSeats();
-  }, [wingId]);
-
   const fetchUserProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -44,6 +39,8 @@ const AvailableSeatsA: React.FC<AvailableSeatsAProps> = ({ wingId }) => {
         return;
       }
 
+      console.log('Fetching available seats...');
+
       // Get all seats for A-Tech wing
       const { data: seats } = await supabase
         .from('seats')
@@ -63,6 +60,8 @@ const AvailableSeatsA: React.FC<AvailableSeatsAProps> = ({ wingId }) => {
         .select('*')
         .eq('status', 'active')
         .gte('date', format(today, 'yyyy-MM-dd'));
+
+      console.log('Fetched data:', { seats, userLeaves, reservations });
 
       if (seats) {
         const UNASSIGNED_SEATS = ['A01', 'A02', 'A49'];
@@ -98,8 +97,12 @@ const AvailableSeatsA: React.FC<AvailableSeatsAProps> = ({ wingId }) => {
               });
             }
           } else {
-            // For assigned seats, check if user is on leave
-            const seatLeaves = userLeaves?.filter(l => l.seat_id == seat.id && (l.type === 'Leave' || l.type === 'Work From Home')) || [];
+            // For assigned seats, check if user is on leave or WFH
+            const seatLeaves = userLeaves?.filter(l => 
+              l.seat_id == seat.id && 
+              (l.type === 'Leave' || l.type === 'Work From Home')
+            ) || [];
+            
             const availableDates = [];
 
             for (const leave of seatLeaves) {
@@ -119,6 +122,7 @@ const AvailableSeatsA: React.FC<AvailableSeatsAProps> = ({ wingId }) => {
 
             // Add seat if it has any available dates
             if (availableDates.length > 0) {
+              console.log(`Seat ${seat.seat_number} available on:`, availableDates);
               available.push({
                 ...seat,
                 type: 'leave',
@@ -129,6 +133,7 @@ const AvailableSeatsA: React.FC<AvailableSeatsAProps> = ({ wingId }) => {
           }
         }
 
+        console.log('Available seats:', available);
         setAvailableSeats(available);
       }
     } catch (error) {
@@ -142,6 +147,33 @@ const AvailableSeatsA: React.FC<AvailableSeatsAProps> = ({ wingId }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchUserProfile();
+    fetchAvailableSeats();
+
+    // Set up real-time subscriptions
+    const leavesSubscription = supabase
+      .channel('leaves-changes-available')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_leaves' }, () => {
+        console.log('User leaves changed, refetching available seats');
+        fetchAvailableSeats();
+      })
+      .subscribe();
+
+    const reservationsSubscription = supabase
+      .channel('reservations-changes-available')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
+        console.log('Reservations changed, refetching available seats');
+        fetchAvailableSeats();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(leavesSubscription);
+      supabase.removeChannel(reservationsSubscription);
+    };
+  }, [wingId]);
 
   const handleReserve = async (seatId: string, selectedDates: string[]) => {
     if (!userProfile) {

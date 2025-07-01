@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -84,49 +83,83 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
     return color;
   }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data: reservationsData } = await supabase.from('reservations').select('*');
-      const { data: profilesData } = await supabase.from('profiles').select('*');
-      const { data: seatsData } = await supabase.from('seats').select('*');
-      const { data: userLeavesData } = await supabase.from('user_leaves').select('*');
-      
-      setReservations(reservationsData || []);
-      setProfiles(profilesData || []);
-      setSeats(seatsData || []);
-      setUserLeaves(userLeavesData || []);
-    };
+  const fetchData = async () => {
+    console.log('Fetching data...');
+    const { data: reservationsData } = await supabase.from('reservations').select('*');
+    const { data: profilesData } = await supabase.from('profiles').select('*');
+    const { data: seatsData } = await supabase.from('seats').select('*');
+    const { data: userLeavesData } = await supabase.from('user_leaves').select('*');
     
+    console.log('Fetched data:', { reservationsData, profilesData, seatsData, userLeavesData });
+    
+    setReservations(reservationsData || []);
+    setProfiles(profilesData || []);
+    setSeats(seatsData || []);
+    setUserLeaves(userLeavesData || []);
+  };
+
+  useEffect(() => {
     fetchData();
+
+    // Set up real-time subscriptions
+    const reservationsSubscription = supabase
+      .channel('reservations-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
+        fetchData();
+      })
+      .subscribe();
+
+    const profilesSubscription = supabase
+      .channel('profiles-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        fetchData();
+      })
+      .subscribe();
+
+    const leavesSubscription = supabase
+      .channel('leaves-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_leaves' }, () => {
+        fetchData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(reservationsSubscription);
+      supabase.removeChannel(profilesSubscription);
+      supabase.removeChannel(leavesSubscription);
+    };
   }, []);
 
   // Fetch today's statuses for all employees
   useEffect(() => {
     const fetchTodayStatuses = async () => {
-      const today = new Date().toISOString().slice(0, 10);
-      const { data: todayLeaves } = await supabase
-        .from('user_leaves')
-        .select('*')
-        .eq('date', today);
+      const today = format(new Date(), 'yyyy-MM-dd');
+      console.log('Fetching today statuses for:', today);
       
-      if (seats.length > 0 && todayLeaves) {
+      if (seats.length > 0) {
         const statusMap: {[key: string]: string} = {};
         
-        // Map seat numbers to today's status
-        seats.forEach(seat => {
-          const todayLeave = todayLeaves.find(l => l.seat_id === seat.id);
+        // Check each seat for today's leave status
+        for (const seat of seats) {
+          const todayLeave = userLeaves.find(l => 
+            l.seat_id === seat.id && 
+            format(new Date(l.date), 'yyyy-MM-dd') === today
+          );
+          
           if (todayLeave) {
             statusMap[seat.seat_number] = todayLeave.type;
+            console.log(`Seat ${seat.seat_number} status: ${todayLeave.type}`);
           } else {
             statusMap[seat.seat_number] = 'Present';
           }
-        });
+        }
         
+        console.log('Today statuses:', statusMap);
         setTodayStatuses(statusMap);
       }
     };
     
-    if (seats.length > 0) {
+    if (seats.length > 0 && userLeaves.length >= 0) {
       fetchTodayStatuses();
     }
   }, [seats, userLeaves]);
@@ -158,7 +191,7 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
     const nextAvailable = getNextAvailableDate(employee);
     
     // Get today's status for this employee
-    const todayStatus = todayStatuses[employee.seatNumber] || employee.status;
+    const todayStatus = todayStatuses[employee.seatNumber] || 'Present';
     
     // Show reservation info for unassigned seats
     let reservationInfo = null;
