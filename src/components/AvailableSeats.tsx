@@ -4,15 +4,18 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { format, isWeekend } from 'date-fns';
+import { format, isWeekend, utcToZonedTime } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
+import { format as formatTz } from 'date-fns-tz';
 
 interface AvailableSeatsProps {
   wingId: string | undefined;
 }
+
+const IST_TIMEZONE = 'Asia/Kolkata';
 
 const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
@@ -163,7 +166,8 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
   };
 
   const today = new Date();
-  const currentDateString = format(today, 'EEEE, dd/MM/yyyy');
+  const todayIST = utcToZonedTime(today, IST_TIMEZONE);
+  const currentDateString = formatTz(todayIST, 'EEEE, dd/MM/yyyy', { timeZone: IST_TIMEZONE });
 
   console.log('EMPLOYEES:', availableSeats);
 
@@ -191,9 +195,9 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
   async function handleBook(seat: any, dates: Date[]) {
     setLoading(true);
     for (const date of dates) {
-      const already = reservations.find(r => r.seat_id === seat.id && r.date === format(date, 'yyyy-MM-dd') && r.status === 'active');
+      const already = reservations.find(r => r.seat_id === seat.id && r.date === formatTz(utcToZonedTime(date, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }) && r.status === 'active');
       if (!already) {
-        await supabase.from('reservations').insert({ seat_id: seat.id, user_id: userId, date: format(date, 'yyyy-MM-dd') });
+        await supabase.from('reservations').insert({ seat_id: seat.id, user_id: userId, date: formatTz(utcToZonedTime(date, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }) });
       }
     }
     setLoading(false);
@@ -217,25 +221,25 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
       d.setDate(d.getDate() + i);
       return d;
     });
-    const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
+    const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : formatTz(utcToZonedTime(new Date(r.date), IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }));
     const availableDays = days.filter(d => {
-      const dateStr = format(d, 'yyyy-MM-dd');
+      const dateStr = formatTz(utcToZonedTime(d, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE });
       return d >= new Date() && !isWeekend(d) && !reservedDates.includes(dateStr);
     });
     return availableDays.length > 0;
   });
 
-  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const todayStr = formatTz(utcToZonedTime(new Date(), IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE });
   const assignedAvailableSeats = availableSeats.filter(seat => {
     if (UNASSIGNED_SEATS.includes(seat.seat_number)) return false;
     // Only consider leave/WFH types
     const seatLeaves = userLeaves.filter(l => l.seat_id == seat.id && (l.type === 'Leave' || l.type === 'Work From Home'));
-    const leaveDates = seatLeaves.map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
+    const leaveDates = seatLeaves.map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : formatTz(utcToZonedTime(new Date(l.date), IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }));
     console.log('Checking seat:', seat.seat_number, 'seat.id:', seat.id, 'seatLeaves:', seatLeaves, 'leaveDates:', leaveDates);
-    const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(new Date(d)));
-    const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
+    const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(utcToZonedTime(new Date(d), IST_TIMEZONE)));
+    const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : formatTz(utcToZonedTime(new Date(r.date), IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }));
     // Filter out weekends from leave dates
-    const weekdayLeaveDates = futureLeaveDates.filter(d => !isWeekend(new Date(d)));
+    const weekdayLeaveDates = futureLeaveDates.filter(d => !isWeekend(utcToZonedTime(new Date(d), IST_TIMEZONE)));
     const availableDates = weekdayLeaveDates.filter(d => !reservedDates.includes(d));
     return availableDates.length > 0;
   });
@@ -279,7 +283,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
           <div className="text-left sm:text-right">
             <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600 bg-white/50 px-3 py-2 rounded-full">
               <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>Today, {format(today, 'EEEE, dd/MM/yyyy')}</span>
+              <span>Today, {currentDateString}</span>
             </div>
           </div>
         </div>
@@ -298,13 +302,13 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
           const isUnassigned = UNASSIGNED_SEATS.includes(seat.seat_number);
           let availableDates: string[] = [];
           if (!isUnassigned) {
-            const todayStr = format(new Date(), 'yyyy-MM-dd');
+            const todayStr = formatTz(utcToZonedTime(new Date(), IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE });
             // Only consider leave/WFH types
             const leaveDates = userLeaves
               .filter(l => l.seat_id == seat.id && (l.type === 'Leave' || l.type === 'Work From Home'))
-              .map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
-            const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(new Date(d)));
-            const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
+              .map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : formatTz(utcToZonedTime(new Date(l.date), IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }));
+            const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(utcToZonedTime(new Date(d), IST_TIMEZONE)));
+            const reservedDates = reservations.filter(r => r.seat_id === seat.id && r.status === 'active').map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : formatTz(utcToZonedTime(new Date(r.date), IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }));
             availableDates = futureLeaveDates.filter(d => !reservedDates.includes(d));
           }
           return (
@@ -357,6 +361,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
               {modalSeat && (() => {
                 const isUnassigned = UNASSIGNED_SEATS.includes(modalSeat.seat_number);
                 const today = new Date();
+                const todayIST = utcToZonedTime(today, IST_TIMEZONE);
                 const days = Array.from({length: 30}, (_, i) => {
                   const d = new Date();
                   d.setDate(today.getDate() + i);
@@ -364,22 +369,22 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                 });
                 const reservedDates = reservations
                   .filter(r => String(r.seat_id) === String(modalSeat.id) && r.status === 'active')
-                  .map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : format(new Date(r.date), 'yyyy-MM-dd'));
+                  .map(r => typeof r.date === 'string' ? r.date.slice(0, 10) : formatTz(utcToZonedTime(new Date(r.date), IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }));
                 console.log('modalSeat.id', modalSeat.id);
                 console.log('reservedDates', reservedDates);
                 console.log('reservations for seat', reservations.filter(r => String(r.seat_id) === String(modalSeat.id)));
                 let availableDates: string[] = [];
                 if (isUnassigned) {
                   availableDates = days
-                    .filter(d => d >= today && !reservedDates.includes(format(d, 'yyyy-MM-dd')) && !isWeekend(d))
-                    .map(d => format(d, 'yyyy-MM-dd'));
+                    .filter(d => d >= today && !reservedDates.includes(formatTz(utcToZonedTime(d, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE })) && !isWeekend(d))
+                    .map(d => formatTz(utcToZonedTime(d, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }));
                 } else {
-                  const todayStr = format(today, 'yyyy-MM-dd');
+                  const todayStr = formatTz(utcToZonedTime(today, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE });
                   // Only consider leave/WFH types
                   const leaveDates = userLeaves
                     .filter(l => l.seat_id == modalSeat.id && (l.type === 'Leave' || l.type === 'Work From Home'))
-                    .map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : format(new Date(l.date), 'yyyy-MM-dd'));
-                  const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(new Date(d)));
+                    .map(l => typeof l.date === 'string' ? l.date.slice(0, 10) : formatTz(utcToZonedTime(new Date(l.date), IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }));
+                  const futureLeaveDates = leaveDates.filter(d => d >= todayStr && !isWeekend(utcToZonedTime(new Date(d), IST_TIMEZONE)));
                   availableDates = futureLeaveDates.filter(d => !reservedDates.includes(d));
                 }
                 if (availableDates.length === 0) {
@@ -391,17 +396,17 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                       <label key={dateStr} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg">
                         <input
                           type="checkbox"
-                          checked={modalDates.some(d => format(d, 'yyyy-MM-dd') === dateStr)}
+                          checked={modalDates.some(d => formatTz(utcToZonedTime(d, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }) === dateStr)}
                           onChange={e => {
                             if (e.target.checked) {
                               setModalDates([...modalDates, new Date(dateStr)]);
                             } else {
-                              setModalDates(modalDates.filter(d => format(d, 'yyyy-MM-dd') !== dateStr));
+                              setModalDates(modalDates.filter(d => formatTz(utcToZonedTime(d, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }) !== dateStr));
                             }
                           }}
                           className="rounded"
                         />
-                        <span>{format(new Date(dateStr), 'EEEE, MMMM dd, yyyy')}</span>
+                        <span>{formatTz(utcToZonedTime(new Date(dateStr), IST_TIMEZONE), 'EEEE, MMMM dd, yyyy', { timeZone: IST_TIMEZONE })}</span>
                       </label>
                     ))}
                   </div>
@@ -422,7 +427,7 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                   let success = true;
                   let errorMsg = '';
                   for (const date of modalDates) {
-                    const dateStr = format(date, 'yyyy-MM-dd');
+                    const dateStr = formatTz(utcToZonedTime(date, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE });
                     const alreadyReserved = reservations.some(
                       r => String(r.seat_id) === String(modalSeat.id) && r.date === dateStr
                     );

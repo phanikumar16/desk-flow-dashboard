@@ -5,8 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { isWeekend } from 'date-fns';
+import { format, isWeekend } from 'date-fns';
+import { toZonedTime, format as formatTz } from 'date-fns-tz';
 import { cn } from '@/lib/utils';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
@@ -85,7 +85,7 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
             const leaveRows = selectedDates.map(date => ({
               user_id: user.id,
               seat_id: seat_id,
-              date: date.toISOString().slice(0, 10),
+              date: formatTz(toZonedTime(date, 'Asia/Kolkata'), 'yyyy-MM-dd', { timeZone: 'Asia/Kolkata' }),
               type: selectedStatus
             }));
             console.log('Inserting user_leaves:', leaveRows);
@@ -141,7 +141,10 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
     onClose();
   };
 
+  const IST_TIMEZONE = 'Asia/Kolkata';
   const today = new Date();
+  const todayIST = toZonedTime(today, IST_TIMEZONE);
+  const todayISTMidnight = new Date(todayIST.getFullYear(), todayIST.getMonth(), todayIST.getDate());
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -203,7 +206,7 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
                     mode="multiple"
                     selected={selectedDates}
                     onSelect={(dates) => setSelectedDates(dates || [])}
-                    disabled={date => date < today || isWeekend(date)}
+                    disabled={date => date < todayISTMidnight || isWeekend(date)}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
                   />
