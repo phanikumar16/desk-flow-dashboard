@@ -238,4 +238,69 @@ body {
   border-color: #2196F3 !important;
   color: #1976d2 !important;
   cursor: not-allowed !important;
+}
+@media (max-width: 600px) {
+  .office-container {
+    max-width: 100vw;
+    min-width: 0;
+    padding: 8px 0 8px 8px;
+    margin: 0;
+    overflow-x: auto;
+    border-width: 2px;
+    border-radius: 8px;
+  }
+  .office-layout {
+    gap: 10px;
+  }
+  .top-section,
+  .main-work-area {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .meeting-room,
+  .server,
+  .pantry,
+  .small-cabin,
+  .group-cabin,
+  .meeting-hall {
+    font-size: 13px;
+    padding: 10px;
+    min-width: 120px;
+    width: 100%;
+    max-width: 100%;
+  }
+  .left-section,
+  .right-section {
+    min-width: 0;
+    width: 100%;
+    margin-left: 0;
+  }
+  .middle-section {
+    margin-left: 0;
+    width: 100%;
+  }
+  .desk-block,
+  .desk-block-4,
+  .desk-block-2h,
+  .desk-block-3l,
+  .desk-block-3l-normal {
+    width: 100%;
+    min-width: 120px;
+    max-width: 100vw;
+    padding: 8px;
+    gap: 4px;
+  }
+  .desk {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 13px;
+    padding: 6px;
+  }
+  .walking-area {
+    padding: 6px;
+    font-size: 11px;
+  }
+  .middle-row {
+    gap: 2px;
+  }
 } 

@@ -327,8 +327,8 @@ const Dashboard = () => {
                 <div className="bg-gradient-to-r from-blue-500/90 to-purple-600/90 backdrop-blur-sm p-8 text-white">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h4 className="text-3xl font-bold mb-2">A-Tech</h4>
-                      <p className="text-white/90 text-lg">Technology & Development Teams</p>
+                      <h4 className="text-3xl font-bold mb-2">A Wing</h4>
+                      <p className="text-white/90 text-lg">Tools and Technology</p>
                     </div>
                     <div className="text-4xl opacity-80 group-hover:opacity-100 transition-opacity group-hover:translate-x-2 transform transition-transform">
                       →
@@ -369,8 +369,8 @@ const Dashboard = () => {
                 <div className="bg-gradient-to-r from-green-500/90 to-blue-600/90 backdrop-blur-sm p-8 text-white">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h4 className="text-3xl font-bold mb-2">B-Finance</h4>
-                      <p className="text-white/90 text-lg">Finance & Operations Teams</p>
+                      <h4 className="text-3xl font-bold mb-2">B Wing</h4>
+                      <p className="text-white/90 text-lg">Finance & Operations</p>
                     </div>
                     <div className="text-4xl opacity-80 group-hover:opacity-100 transition-opacity group-hover:translate-x-2 transform transition-transform">
                       →
