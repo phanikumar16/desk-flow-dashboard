@@ -85,11 +85,7 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
             const leaveRows = selectedDates.map(date => ({
               user_id: user.id,
               seat_id: seat_id,
-<<<<<<< HEAD
-              date: formatTz(toZonedTime(date, 'Asia/Kolkata'), 'yyyy-MM-dd', { timeZone: 'Asia/Kolkata' }),
-=======
               date: formatTz(toZonedTime(date, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }),
->>>>>>> 52a3914 (Pre-final)
               type: selectedStatus
             }));
             console.log('Inserting user_leaves:', leaveRows);
@@ -144,14 +140,9 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
     onClose();
   };
 
-  const IST_TIMEZONE = 'Asia/Kolkata';
   const today = new Date();
-<<<<<<< HEAD
   const todayIST = toZonedTime(today, IST_TIMEZONE);
   const todayISTMidnight = new Date(todayIST.getFullYear(), todayIST.getMonth(), todayIST.getDate());
-=======
-  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
->>>>>>> 52a3914 (Pre-final)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -213,11 +204,7 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
                     mode="multiple"
                     selected={selectedDates}
                     onSelect={(dates) => setSelectedDates(dates || [])}
-<<<<<<< HEAD
                     disabled={date => date < todayISTMidnight || isWeekend(date)}
-=======
-                    disabled={date => date < todayMidnight || isWeekend(date)}
->>>>>>> 52a3914 (Pre-final)
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
                   />
