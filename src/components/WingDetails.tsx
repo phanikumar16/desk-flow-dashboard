@@ -18,12 +18,12 @@ const WingDetails = () => {
   
   const wingData = {
     'a-tech': {
-      name: 'A-Tech',
-      description: 'Technology & Development Teams'
+      name: 'A Wing',
+      description: 'Tools and Technology'
     },
     'b-finance': {
-      name: 'B-Finance', 
-      description: 'Finance & Operations Teams'
+      name: 'B Wing', 
+      description: 'Finance & Operations'
     }
   };
 
@@ -147,15 +147,10 @@ const WingDetails = () => {
       <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-pink-500 to-black rounded-lg flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-xs sm:text-sm">C</span>
-              </div>
-              <h1 className="text-xl sm:text-2xl font-bold">
-                <span className="text-pink-500">c</span>
-                <span className="text-black">prime</span>
-              </h1>
-            </div>
+            <h1 className="text-2xl sm:text-4xl font-bold">
+              <span style={{ color: '#ad1457' }}>c</span>
+              <span className="text-black">prime</span>
+            </h1>
             <Link to="/" className="text-blue-600 hover:text-blue-700 text-sm sm:text-base font-medium bg-white/70 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/90 transition-all border border-blue-200/50 shadow-sm">
               ← Back to Dashboard
             </Link>
