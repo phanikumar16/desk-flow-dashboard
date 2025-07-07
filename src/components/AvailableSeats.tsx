@@ -4,7 +4,12 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+<<<<<<< HEAD
 import { format, isWeekend, utcToZonedTime } from 'date-fns';
+=======
+import { format, isWeekend } from 'date-fns';
+import { toZonedTime, format as formatTz } from 'date-fns-tz';
+>>>>>>> 52a3914 (Pre-final)
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '../lib/supabaseClient';
@@ -195,9 +200,15 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
   async function handleBook(seat: any, dates: Date[]) {
     setLoading(true);
     for (const date of dates) {
+<<<<<<< HEAD
       const already = reservations.find(r => r.seat_id === seat.id && r.date === formatTz(utcToZonedTime(date, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }) && r.status === 'active');
       if (!already) {
         await supabase.from('reservations').insert({ seat_id: seat.id, user_id: userId, date: formatTz(utcToZonedTime(date, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }) });
+=======
+      const already = reservations.find(r => r.seat_id === seat.id && r.date === formatTz(toZonedTime(date, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }) && r.status === 'active');
+      if (!already) {
+        await supabase.from('reservations').insert({ seat_id: seat.id, user_id: userId, date: formatTz(toZonedTime(date, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }) });
+>>>>>>> 52a3914 (Pre-final)
       }
     }
     setLoading(false);
@@ -427,7 +438,11 @@ const AvailableSeats: React.FC<AvailableSeatsProps> = ({ wingId }) => {
                   let success = true;
                   let errorMsg = '';
                   for (const date of modalDates) {
+<<<<<<< HEAD
                     const dateStr = formatTz(utcToZonedTime(date, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE });
+=======
+                    const dateStr = formatTz(toZonedTime(date, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE });
+>>>>>>> 52a3914 (Pre-final)
                     const alreadyReserved = reservations.some(
                       r => String(r.seat_id) === String(modalSeat.id) && r.date === dateStr
                     );

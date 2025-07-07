@@ -220,4 +220,22 @@ body {
 }
 .small-meeting-room {
   width: 43%;
+}
+.desk-bookable {
+  background: #ffdddd !important;
+  border-color: #e53935 !important;
+  color: #b71c1c !important;
+  cursor: pointer !important;
+}
+.desk-reserved {
+  background: #e0e0e0 !important;
+  border-color: #bdbdbd !important;
+  color: #757575 !important;
+  cursor: not-allowed !important;
+}
+.desk-onsite {
+  background: linear-gradient(135deg, #e8f4f8, #d1ebf5) !important;
+  border-color: #2196F3 !important;
+  color: #1976d2 !important;
+  cursor: not-allowed !important;
 } 

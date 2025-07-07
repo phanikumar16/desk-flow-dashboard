@@ -65,7 +65,6 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
   };
 
   const generateEmail = (employee: typeof employees[0]) => {
-    if (employee.email) return employee.email;
     if (employee.name === 'Unassigned') return '';
     return employee.name.toLowerCase().replace(/\s+/g, '.') + '@cprime.com';
   };
@@ -226,15 +225,18 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
             setModalSeat(employee.seatNumber);
             setUnassignedModalOpen(true);
           } else {
-            setSelectedEmployee({...employee, status: todayStatus});
-            setEmployeeModalOpen(true);
+            setEmployeeModalOpen(false);
+            setSelectedEmployee(null);
+            setTimeout(() => {
+              setSelectedEmployee({ ...employee, status: todayStatus });
+              setEmployeeModalOpen(true);
+            }, 10);
           }
         }}
       >
         <div className="flex items-center space-x-4 flex-1 relative z-20">
           <div className="relative">
             <Avatar className="w-14 h-14 shadow-lg ring-2 ring-white/50" style={{ backgroundColor: empColor }}>
-              <AvatarImage src="/placeholder.svg" />
               <AvatarFallback className="text-sm text-white font-bold" style={{ backgroundColor: empColor }}>
                 {getInitials(employee.name)}
               </AvatarFallback>
@@ -342,8 +344,8 @@ const EmployeeDirectory: React.FC<EmployeeDirectoryProps> = ({ wingId }) => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center space-x-4">
-              <Avatar className="w-16 h-16" style={{ backgroundColor: stringToColor(selectedEmployee.name) }}>
-                <AvatarFallback className="text-white font-bold text-lg">
+              <Avatar className="w-16 h-16" style={{ backgroundColor: stringToColor(selectedEmployee.name + selectedEmployee.seatNumber) }}>
+                <AvatarFallback className="text-white font-bold text-lg" style={{ backgroundColor: stringToColor(selectedEmployee.name + selectedEmployee.seatNumber) }}>
                   {getInitials(selectedEmployee.name)}
                 </AvatarFallback>
               </Avatar>

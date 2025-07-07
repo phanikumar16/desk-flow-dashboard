@@ -9,6 +9,24 @@ import { useToast } from '@/hooks/use-toast';
 import StatusUpdateModal from './StatusUpdateModal';
 import { supabase } from '../lib/supabaseClient';
 
+function stringToColor(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  let color = '#';
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xff;
+    color += ('00' + value.toString(16)).slice(-2);
+  }
+  return color;
+}
+
+function getInitials(name) {
+  if (!name) return '?';
+  return name.split(' ').map(n => n[0]).join('').toUpperCase();
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -18,6 +36,7 @@ const Dashboard = () => {
   const [userReservations, setUserReservations] = useState<any[]>([]);
   const [seatCounts, setSeatCounts] = useState({ atech: { total: 64, available: 0 }, bfinance: { total: 48, available: 0 } });
   const [todayStatus, setTodayStatus] = useState<string>('Present');
+  const [userLeaves, setUserLeaves] = useState<any[]>([]);
   const { toast } = useToast();
 
   const fetchProfile = async () => {
@@ -139,9 +158,48 @@ const Dashboard = () => {
   };
 
   const handleStatusUpdated = () => {
-    // Refresh user profile and seat counts after status update
+    // Refresh user profile, seat counts, and user leaves after status update
     fetchProfile();
     fetchSeatCounts();
+    fetchUserLeaves();
+  };
+
+  // Fetch user's leaves/WFH
+  const fetchUserLeaves = async () => {
+    if (!currentUser) return;
+    // Get seat_id for this user
+    const { data: seatRow } = await supabase
+      .from('seats')
+      .select('id, seat_number')
+      .eq('seat_number', currentUser.seat_number)
+      .single();
+    if (!seatRow?.id) return;
+    // Fetch all leaves for this seat (user)
+    const { data: leaves } = await supabase
+      .from('user_leaves')
+      .select('id, date, type, seat_id')
+      .eq('seat_id', seatRow.id)
+      .order('date', { ascending: false });
+    // Attach seat_number for display
+    const leavesWithSeat = (leaves || []).map(l => ({ ...l, seat_number: seatRow.seat_number }));
+    setUserLeaves(leavesWithSeat);
+  };
+
+  // Fetch user leaves when modal opens or user changes
+  useEffect(() => {
+    if (showLeavesModal && currentUser) {
+      fetchUserLeaves();
+    }
+  }, [showLeavesModal, currentUser]);
+
+  const handleCancelLeave = async (leaveId: string) => {
+    const { error } = await supabase.from('user_leaves').delete().eq('id', leaveId);
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to cancel leave/WFH.', variant: 'destructive' });
+    } else {
+      toast({ title: 'Cancelled', description: 'Leave/WFH entry cancelled.' });
+      fetchUserLeaves();
+    }
   };
 
   // Show loading while checking authentication
@@ -170,10 +228,9 @@ const Dashboard = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <div className="flex items-center cursor-pointer space-x-2 bg-white/50 backdrop-blur-sm rounded-full px-3 py-2 hover:bg-white/70 transition-all">
-                    <Avatar className="w-8 h-8 sm:w-10 sm:h-10 ring-2 ring-white/50">
-                      <AvatarImage src="/placeholder.svg" />
-                      <AvatarFallback className="text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                        {currentUser && currentUser.full_name ? currentUser.full_name[0] : '?'}
+                    <Avatar className="w-8 h-8 sm:w-10 sm:h-10 ring-2 ring-white/50" style={{ backgroundColor: stringToColor((currentUser?.full_name || '') + (currentUser?.seat_number || '')) }}>
+                      <AvatarFallback className="text-xs sm:text-sm text-white font-bold" style={{ backgroundColor: stringToColor((currentUser?.full_name || '') + (currentUser?.seat_number || '')) }}>
+                        {getInitials(currentUser?.full_name)}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-gray-700 font-medium text-sm sm:text-base">{currentUser ? currentUser.full_name : 'Guest'}</span>
@@ -206,10 +263,9 @@ const Dashboard = () => {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
             <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
               <div className="relative">
-                <Avatar className="w-16 h-16 sm:w-20 sm:h-20 ring-4 ring-gradient-to-r from-blue-400 to-purple-400">
-                  <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback className="text-lg sm:text-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                    {currentUser && currentUser.full_name ? currentUser.full_name[0] : '?'}
+                <Avatar className="w-16 h-16 sm:w-20 sm:h-20 ring-4 ring-gradient-to-r from-blue-400 to-purple-400" style={{ backgroundColor: stringToColor((currentUser?.full_name || '') + (currentUser?.seat_number || '')) }}>
+                  <AvatarFallback className="text-lg sm:text-xl text-white font-bold" style={{ backgroundColor: stringToColor((currentUser?.full_name || '') + (currentUser?.seat_number || '')) }}>
+                    {getInitials(currentUser?.full_name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 ${
@@ -370,18 +426,30 @@ const Dashboard = () => {
             <DialogTitle className="text-lg sm:text-xl">My Leaves/WFH</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="text-center">
-              <p className="text-gray-600 mb-4">Update your leave or work-from-home status</p>
-              <Button 
-                onClick={() => {
-                  setShowLeavesModal(false);
-                  setShowStatusModal(true);
-                }}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-              >
-                Update Status
-              </Button>
-            </div>
+            {userLeaves.length === 0 ? (
+              <div className="text-gray-500 text-center">No leaves or WFH entries found.</div>
+            ) : (
+              <ul className="divide-y divide-gray-200">
+                {userLeaves.map(l => (
+                  <li key={l.id} className="py-2 flex items-center justify-between">
+                    <span>
+                      <span className={
+                        l.type === 'Leave' ? 'text-red-600' : l.type === 'Work From Home' ? 'text-yellow-700' : 'text-gray-700'
+                      }>
+                        {l.type}
+                      </span>
+                      {` on ${l.date}`} (Seat {l.seat_number})
+                    </span>
+                    <button
+                      className="ml-4 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
+                      onClick={() => handleCancelLeave(l.id)}
+                    >
+                      Cancel
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </DialogContent>
       </Dialog>

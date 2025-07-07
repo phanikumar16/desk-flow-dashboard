@@ -23,6 +23,8 @@ interface StatusUpdateModalProps {
   onStatusUpdated?: () => void;
 }
 
+const IST_TIMEZONE = 'Asia/Kolkata';
+
 const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, currentUser, onStatusUpdated }) => {
   const [selectedStatus, setSelectedStatus] = useState(currentUser.status);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
@@ -73,19 +75,21 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
               toast({ title: 'Error', description: 'Could not find your seat. Please contact admin.', variant: 'destructive' });
               return;
             }
-            // Clear existing future leave dates for this seat
-            const today = new Date().toISOString().slice(0, 10);
+            // Clear ALL existing leave dates for this seat (not just future dates)
             await supabase
               .from('user_leaves')
               .delete()
-              .eq('seat_id', seat_id)
-              .gte('date', today);
+              .eq('seat_id', seat_id);
 
             // Insert new leave dates
             const leaveRows = selectedDates.map(date => ({
               user_id: user.id,
               seat_id: seat_id,
+<<<<<<< HEAD
               date: formatTz(toZonedTime(date, 'Asia/Kolkata'), 'yyyy-MM-dd', { timeZone: 'Asia/Kolkata' }),
+=======
+              date: formatTz(toZonedTime(date, IST_TIMEZONE), 'yyyy-MM-dd', { timeZone: IST_TIMEZONE }),
+>>>>>>> 52a3914 (Pre-final)
               type: selectedStatus
             }));
             console.log('Inserting user_leaves:', leaveRows);
@@ -103,18 +107,17 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
           toast({ title: 'Error', description: 'Please select at least one date for leave or work from home.', variant: 'destructive' });
           return;
         } else if (selectedStatus === 'Present') {
-          // Clear all future leave dates when status is set to Present
+          // Clear ALL leave dates when status is set to Present
           const { data: profile } = await supabase.from('profiles').select('seat_number').eq('id', user.id).single();
           if (profile && profile.seat_number) {
             const { data: seatRow } = await supabase.from('seats').select('id').eq('seat_number', profile.seat_number).single();
             const seat_id = seatRow?.id;
             if (seat_id) {
-              const today = new Date().toISOString().slice(0, 10);
+              // Clear ALL existing leave dates for this seat
               await supabase
                 .from('user_leaves')
                 .delete()
-                .eq('seat_id', seat_id)
-                .gte('date', today);
+                .eq('seat_id', seat_id);
             }
           }
         }
@@ -143,8 +146,12 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
 
   const IST_TIMEZONE = 'Asia/Kolkata';
   const today = new Date();
+<<<<<<< HEAD
   const todayIST = toZonedTime(today, IST_TIMEZONE);
   const todayISTMidnight = new Date(todayIST.getFullYear(), todayIST.getMonth(), todayIST.getDate());
+=======
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+>>>>>>> 52a3914 (Pre-final)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -206,7 +213,11 @@ const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({ isOpen, onClose, 
                     mode="multiple"
                     selected={selectedDates}
                     onSelect={(dates) => setSelectedDates(dates || [])}
+<<<<<<< HEAD
                     disabled={date => date < todayISTMidnight || isWeekend(date)}
+=======
+                    disabled={date => date < todayMidnight || isWeekend(date)}
+>>>>>>> 52a3914 (Pre-final)
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
                   />
